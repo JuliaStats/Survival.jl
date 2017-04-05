@@ -56,5 +56,9 @@ using Base.Test
 
             @test sort(x) == x
         end
+
+        @test_throws DimensionMismatch EventTimeVector([1,2,3], [true])
+
+        @test EventTimeVector([EventTime(1), EventTime(2)]) == EventTimeVector([1,2], falses(2))
     end
 end
