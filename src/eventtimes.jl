@@ -125,3 +125,27 @@ function Base.copy(ev::EventTimeVector{T}) where {T}
 end
 
 Base.sort(ev::EventTimeVector) = ev[sortperm(ev.times)]
+
+function Base.sort!(ev::EventTimeVector)
+    p = sortperm(ev.times)
+    permute!(ev.times, p)
+    permute!(ev.status, p)
+    return ev
+end
+
+function Base.push!(ev::EventTimeVector, t::EventTime)
+    push!(ev.times, t.time)
+    push!(ev.status, t.status)
+    return ev
+end
+
+for f in [:append!, :prepend!]
+    @eval function Base.$f(ev1::EventTimeVector, ev2::EventTimeVector)
+        $f(ev1.times, ev2.times)
+        $f(ev1.status, ev2.status)
+        return ev1
+    end
+end
+
+Base.vcat(ev1::EventTimeVector, ev2::EventTimeVector) =
+    EventTimeVector(vcat(ev1.times, ev2.times), vcat(ev1.status, ev2.status))

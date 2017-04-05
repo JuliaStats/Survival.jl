@@ -60,5 +60,22 @@ using Base.Test
         @test_throws DimensionMismatch EventTimeVector([1,2,3], [true])
 
         @test EventTimeVector([EventTime(1), EventTime(2)]) == EventTimeVector([1,2], falses(2))
+
+        let x = EventTimeVector([1, 2])
+            push!(x, EventTime(3))
+            @test x == EventTimeVector([1, 2, 3])
+
+            append!(x, EventTimeVector([4, 5]))
+            @test x == EventTimeVector([1, 2, 3, 4, 5])
+
+            prepend!(x, EventTimeVector([6]))
+            @test x == EventTimeVector([6; 1:5])
+
+            sort!(x)
+            @test x == EventTimeVector(collect(1:6))
+
+            y = EventTimeVector([7])
+            @test [x; y] == EventTimeVector(collect(1:7))
+        end
     end
 end
