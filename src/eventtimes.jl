@@ -69,7 +69,7 @@ EventTimeVector(t::AbstractVector{T}) where {T<:Real} = EventTimeVector{T}(t, fa
 
 ## Overloaded Base functions
 
-for f in [:length, :endof, :size, :eachindex]
+for f in [:length, :endof, :size, :eachindex, :isempty]
     @eval Base.$f(ev::EventTimeVector) = $f(ev.times)
 end
 

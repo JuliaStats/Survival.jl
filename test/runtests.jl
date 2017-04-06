@@ -26,6 +26,7 @@ using Base.Test
             @test size(x) == (2,)
             @test eachindex(x) == Base.OneTo(2)
             @test indices(x) == (Base.OneTo(2),)
+            @test !isempty(x)
             @test Base.iteratorsize(x) == Base.HasShape()
             @test Base.iteratoreltype(x) == Base.HasEltype()
             @test Base.IndexStyle(x) == Base.IndexLinear()
