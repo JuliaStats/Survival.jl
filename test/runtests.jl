@@ -139,4 +139,7 @@ end
     @test km_ev.nevents == km.nevents
     @test km_ev.ncensor == km.ncensor
     @test km_ev.survival ≈ jl_surv
+
+    @test_throws DimensionMismatch fit(KaplanMeier, [1, 2], [true])
+    @test_throws ArgumentError fit(KaplanMeier, Float64[], Bool[])
 end
