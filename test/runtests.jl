@@ -76,6 +76,7 @@ using Base.Test
 
             y = EventTimeVector([7])
             @test [x; y] == EventTimeVector(collect(1:7))
+            @test [y; y; y] == EventTimeVector([7, 7, 7])
         end
     end
 end

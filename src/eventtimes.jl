@@ -147,5 +147,6 @@ for f in [:append!, :prepend!]
     end
 end
 
-Base.vcat(ev1::EventTimeVector, ev2::EventTimeVector) =
-    EventTimeVector(vcat(ev1.times, ev2.times), vcat(ev1.status, ev2.status))
+Base.vcat(ev::EventTimeVector, evs::EventTimeVector...) =
+    EventTimeVector(vcat(ev.times, getfield.(evs, :times)...),
+                    vcat(ev.status, getfield.(evs, :status)...))
