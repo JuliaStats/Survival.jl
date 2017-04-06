@@ -2,7 +2,7 @@ abstract type AbstractEstimator end
 abstract type NonparametricEstimator <: AbstractEstimator end
 
 """
-    KaplanMeier(times, events)
+    fit(KaplanMeier, times, events)
 
 Given a vector of times to events and a corresponding vector of indicators that
 dictate whether each time is an observed event or is right censored, compute the
@@ -80,7 +80,6 @@ function _km(tte::AbstractVector{T}, status::BitVector) where {T}
 
     return KaplanMeier{T}(times, nevents, ncensor, natrisk, survival)
 end
-
 
 function StatsBase.fit(::Type{KaplanMeier},
                        times::AbstractVector{T},
