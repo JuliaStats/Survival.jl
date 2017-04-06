@@ -91,12 +91,12 @@ end
         350, 272, 292, 332, 285, 243, 276,  79, 240, 202, 235, 224, 239, 173, 252,  92, 192,
         211, 175, 203, 105, 177,
     ]
-    s = BitVector([
+    s = [
         1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
         1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1,
         0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
         0, 0, 0, 0, 0, 0,
-    ])
+    ]
 
     # Results generated from R 3.3.2 using survival 2.41
     # survfit(Surv(t, s) ~ 1)
@@ -131,5 +131,12 @@ end
     @test km.times == sort!(unique(t))
     @test km.natrisk == r_risk
     @test km.nevents == [sum(s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
-    @test km.ncensor == [sum(!, s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
+    @test km.ncensor == [sum(iszero, s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
+
+    km_ev = fit(KaplanMeier, EventTimeVector(t, BitVector(s)))
+    @test km_ev.times == km.times
+    @test km_ev.natrisk == km.natrisk
+    @test km_ev.nevents == km.nevents
+    @test km_ev.ncensor == km.ncensor
+    @test km_ev.survival ≈ jl_surv
 end

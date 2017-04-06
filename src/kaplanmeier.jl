@@ -30,8 +30,7 @@ struct KaplanMeier{T<:Real} <: NonparametricEstimator
 end
 
 # Internal Kaplan-Meier function with the following assumptions:
-#  * The input array is sorted
-#  * It is nonempty
+#  * The input is nonempty
 #  * Time 0 is not included
 function _km(tte::AbstractVector{T}, status::BitVector) where {T}
     nobs = length(tte)
@@ -81,11 +80,25 @@ function _km(tte::AbstractVector{T}, status::BitVector) where {T}
     return KaplanMeier{T}(times, nevents, ncensor, natrisk, survival)
 end
 
+# NOTE: <:Integer will need to change if/when !(Bool<:Integer)
 function StatsBase.fit(::Type{KaplanMeier},
                        times::AbstractVector{T},
-                       status::AbstractVector{Bool}) where {T}
+                       status::AbstractVector{<:Integer}) where {T}
+    nobs = length(times)
+    if length(status) != nobs
+        throw(DimensionMismatch("there must be as many event statuses as times"))
+    end
+    if nobs == 0
+        throw(ArgumentError("the sample must be nonempty"))
+    end
     p = sortperm(times)
     t = times[p]
-    s = status[p]
+    s = BitVector(status[p])
     return _km(t, s)
+end
+
+function StatsBase.fit(::Type{KaplanMeier}, ev::EventTimeVector)
+    isempty(ev) && throw(ArgumentError("the sample must be nonempty"))
+    ev_sorted = sort(ev)
+    return _km(ev_sorted.times, ev_sorted.status)
 end
