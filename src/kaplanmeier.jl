@@ -1,12 +1,9 @@
 """
-    fit(KaplanMeier, times, events)
-    fit(KaplanMeier, ev::EventTimeVector)
+    KaplanMeier
 
-Given a vector of times to events and a corresponding vector of indicators that
-dictate whether each time is an observed event or is right censored, compute the
-Kaplan-Meier estimate of the survivor function.
-
-The resulting `KaplanMeier` object has the following fields:
+An immutable type containing survivor function estimates computed
+using the Kaplan-Meier method.
+The type has the following fields:
 
 * `times`: Distinct event times
 * `nevents`: Number of observed events at each time
@@ -15,30 +12,8 @@ The resulting `KaplanMeier` object has the following fields:
 * `survival`: Estimate of the survival probability at each time
 * `stderr`: Standard error of the log survivor function at each time
 
-### Formulas
-
-The survivor function estimate is given by
-``
-\\hat{S}(t) = \\prod_{i: t_i < t} \\left( 1 - \\frac{d_i}{n_i} \\right)
-``
-where ``d_i`` is the number of observed events at time ``t_i`` and ``n_i`` is
-the number of subjects at risk just before ``t_i``.
-
-The pointwise standard error of the log of the survivor function is computed
-using Greenwood's formula:
-``
-\\text{Var}(\\log \\hat{S}(t)) = \\sum_{i: t_i < t} \\frac{d_i}{n_i (n_i - d_i)}
-``
-
-### References
-
-* Kaplan, E. L., and Meier, P. (1958). *Nonparametric Estimation from Incomplete
-  Observations*. Journal of the American Statistical Association, 53(282), 457-481.
-  doi:10.2307/2281868
-
-* Greenwood, M. (1926). *A Report on the Natural Duration of Cancer*. Reports on
-  Public Health and Medical Subjects. London: Her Majesty's Stationery Office.
-  33, 1-26.
+Use `fit(KaplanMeier, ...)` to compute the estimates and construct
+this type.
 """
 struct KaplanMeier{T<:Real} <: NonparametricEstimator
     times::Vector{T}
@@ -105,7 +80,14 @@ function _km(tte::AbstractVector{T}, status::BitVector) where {T}
     return KaplanMeier{T}(times, nevents, ncensor, natrisk, survival, stderr)
 end
 
-# NOTE: <:Integer will need to change if/when !(Bool<:Integer)
+"""
+    fit(::Type{KaplanMeier}, times, status)
+
+Given a vector of times to events and a corresponding vector of indicators that
+dictate whether each time is an observed event or is right censored, compute the
+Kaplan-Meier estimate of the survivor function. Returns a [`KaplanMeier`](@ref)
+object.
+"""
 function StatsBase.fit(::Type{KaplanMeier},
                        times::AbstractVector{T},
                        status::AbstractVector{<:Integer}) where {T}
