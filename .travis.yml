@@ -11,3 +11,4 @@ notifications:
 #  - julia -e 'Pkg.clone(pwd()); Pkg.build("Survival"); Pkg.test("Survival"; coverage=true)';
 after_success:
   - julia -e 'cd(Pkg.dir("Survival")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())';
+  - julia -e 'cd(Pkg.dir("Survival")); Pkg.add("Documenter"); include(joinpath("docs", "make.jl"))';
