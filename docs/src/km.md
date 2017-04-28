@@ -6,9 +6,9 @@ beyond a given time.
 
 The estimate is given by
 
-``
+```math
 \hat{S}(t) = \prod_{i: t_i < t} \left( 1 - \frac{d_i}{n_i} \right)
-``
+```
 
 where ``d_i`` is the number of observed events at time ``t_i`` and ``n_i`` is the
 number of subjects at risk for the event just before time ``t_i``.
@@ -16,20 +16,16 @@ number of subjects at risk for the event just before time ``t_i``.
 The pointwise standard error of the log of the survivor function can be computed
 using Greenwood's formula:
 
-``
+```math
 \text{SE}(\log \hat{S}(t)) = \sqrt{\sum_{i: t_i < t} \frac{d_i}{n_i (n_i - d_i)}}
-``
+```
 
 ## API
 
-```@meta
-CurrentModule = Survival
-```
-
 ```@docs
 Survival.KaplanMeier
-StatsBase.fit(::Type{Survival.KaplanMeier}, ::Any, ::Any)
-StatsBase.confint(::Survival.KaplanMeier, ::Any)
+StatsBase.fit
+StatsBase.confint
 ```
 
 ## References
