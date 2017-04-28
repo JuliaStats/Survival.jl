@@ -29,7 +29,39 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Contents",
     "category": "section",
-    "text": "Pages = [\n    \"km.md\",\n]\nDepth = 1"
+    "text": "Pages = [\n    \"events.md\",\n    \"km.md\",\n]\nDepth = 1"
+},
+
+{
+    "location": "events.html#",
+    "page": "Event Times",
+    "title": "Event Times",
+    "category": "page",
+    "text": ""
+},
+
+{
+    "location": "events.html#Survival.EventTime",
+    "page": "Event Times",
+    "title": "Survival.EventTime",
+    "category": "Type",
+    "text": "EventTime{T}\n\nImmutable object containing the real-valued time to an event as well as an indicator of whether the time corresponds to an observed event or right censoring.\n\n\n\n"
+},
+
+{
+    "location": "events.html#Survival.EventTimeVector",
+    "page": "Event Times",
+    "title": "Survival.EventTimeVector",
+    "category": "Type",
+    "text": "EventTimeVector{T}\n\nA vector containing event times and indicators of whether each time is an observed event or right censoring.\n\n\n\n"
+},
+
+{
+    "location": "events.html#Event-Times-1",
+    "page": "Event Times",
+    "title": "Event Times",
+    "category": "section",
+    "text": "A crucial concept in survival analysis is the time elapsed between some landmark and a particular event of interest. As an example, say you're running a clinical trial to investigate the efficacy of a new anticonvulsant. You may be interested in the time from the start of therapy to the first epileptic seizure for each patient. But if a patient dies or otherwise goes off study before they have a seizure, you'll assume that a seizure would have occurred eventually, but you don't know when exactly. In this case the event time is right censored; the true event time is unknown, all you know is that it exceeds the observed time.To conveniently store right censored data, two types are provided for convenience.Survival.EventTime\nSurvival.EventTimeVector"
 },
 
 {
@@ -41,9 +73,9 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
-    "location": "km.html#Kaplan-Meier-estimator-1",
+    "location": "km.html#Kaplan-Meier-Estimator-1",
     "page": "Kaplan-Meier",
-    "title": "Kaplan-Meier estimator",
+    "title": "Kaplan-Meier Estimator",
     "category": "section",
     "text": "The Kaplan-Meier estimator is a nonparametric estimator of the survivor function, i.e. the probability of survival beyond a given time.The estimate is given byhatS(t) = prod_i t_i  t left( 1 - fracd_in_i right)where d_i is the number of observed events at time t_i and n_i is the number of subjects at risk for the event just before time t_i.The pointwise standard error of the log of the survivor function can be computed using Greenwood's formula:textSE(log hatS(t)) = sqrtsum_i t_i  t fracd_in_i (n_i - d_i)"
 },
