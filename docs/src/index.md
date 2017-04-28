@@ -16,6 +16,7 @@ Pkg.clone("https://github.com/ararslan/Survival.jl.git")
 
 ```@contents
 Pages = [
+    "events.md",
     "km.md",
 ]
 Depth = 1

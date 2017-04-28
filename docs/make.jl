@@ -8,6 +8,7 @@ makedocs(
     authors = "Alex Arslan",
     pages = [
         "Home" => "index.md",
+        "Event Times" => "events.md",
         "Kaplan-Meier" => "km.md",
     ],
 )

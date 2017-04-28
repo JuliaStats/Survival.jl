@@ -1,4 +1,4 @@
-# Kaplan-Meier estimator
+# Kaplan-Meier Estimator
 
 The [Kaplan-Meier estimator](https://en.wikipedia.org/wiki/Kaplan-Meier_estimator)
 is a nonparametric estimator of the survivor function, i.e. the probability of survival
