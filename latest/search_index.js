@@ -49,11 +49,35 @@ var documenterSearchIndex = {"docs": [
 },
 
 {
+    "location": "km.html#Survival.KaplanMeier",
+    "page": "Kaplan-Meier",
+    "title": "Survival.KaplanMeier",
+    "category": "Type",
+    "text": "KaplanMeier\n\nAn immutable type containing survivor function estimates computed using the Kaplan-Meier method. The type has the following fields:\n\ntimes: Distinct event times\nnevents: Number of observed events at each time\nncensor: Number of right censored events at each time\nnatrisk: Size of the risk set at each time\nsurvival: Estimate of the survival probability at each time\nstderr: Standard error of the log survivor function at each time\n\nUse fit(KaplanMeier, ...) to compute the estimates and construct this type.\n\n\n\n"
+},
+
+{
+    "location": "km.html#StatsBase.fit",
+    "page": "Kaplan-Meier",
+    "title": "StatsBase.fit",
+    "category": "Function",
+    "text": "fit(::Type{KaplanMeier}, times, status)\n\nGiven a vector of times to events and a corresponding vector of indicators that dictate whether each time is an observed event or is right censored, compute the Kaplan-Meier estimate of the survivor function. Returns a KaplanMeier object.\n\n\n\n"
+},
+
+{
+    "location": "km.html#StatsBase.confint",
+    "page": "Kaplan-Meier",
+    "title": "StatsBase.confint",
+    "category": "Function",
+    "text": "confint(km::KaplanMeier, α=0.05)\n\nCompute the pointwise log-log transformed confidence intervals for the survivor function as a vector of tuples.\n\n\n\n"
+},
+
+{
     "location": "km.html#API-1",
     "page": "Kaplan-Meier",
     "title": "API",
     "category": "section",
-    "text": "CurrentModule = SurvivalSurvival.KaplanMeier\nStatsBase.fit(::Type{Survival.KaplanMeier}, ::Any, ::Any)\nStatsBase.confint(::Survival.KaplanMeier, ::Any)"
+    "text": "Survival.KaplanMeier\nStatsBase.fit\nStatsBase.confint"
 },
 
 {
