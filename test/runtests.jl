@@ -1,6 +1,8 @@
 using Survival
 using Compat
 using Compat.Test
+using JLD
+using DataFrames
 
 @testset "Event times" begin
     @test isevent(EventTime{Int}(44, true))
@@ -143,3 +145,5 @@ end
 
     @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
 end
+
+include("cox_rossi.jl")
