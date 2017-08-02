@@ -4,7 +4,6 @@ module Survival
 
 using StatsBase
 using Distributions
-using DataFrames
 using PositiveFactorizations
 
 export
@@ -14,7 +13,9 @@ export
 
     KaplanMeier,
     fit,
-    confint
+    confint,
+
+    coxph
 
 abstract type AbstractEstimator end
 abstract type NonparametricEstimator <: AbstractEstimator end

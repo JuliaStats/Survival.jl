@@ -1,4 +1,4 @@
-function cox_f(S, fs, ls, ξ , X, β, λ, alive, afterΘ) # preprocessed already
+function _cox_f(S, fs, ls, ξ , X, β, λ, alive, afterΘ) # preprocessed already
     Xβ = X*β
     Θ = exp.(Xβ)
     after!(afterΘ, Θ)
@@ -19,7 +19,7 @@ end
 # preprocessed already:
 # fs = index first deaths, ls = index last deaths,
 # X is covariates, ξ is covariate covariate transpose
-function cox_h!(grad,hes, S, fs, ls, ξ , X, β, λ, alive, afterΘ, afterXΘ, afterξΘ)
+function _cox_h!(grad,hes, S, fs, ls, ξ , X, β, λ, alive, afterΘ, afterXΘ, afterξΘ)
     #compute relevant quantities for loglikelihood, score, fischer_info
 
     Xβ = X*β
@@ -69,7 +69,7 @@ function cox_h!(grad,hes, S, fs, ls, ξ , X, β, λ, alive, afterΘ, afterXΘ, a
     return y
 end
 
-function coxph(S::AbstractVector,X::AbstractArray; l2_cost = 0., kwargs...)
+function _coxph(X::AbstractArray, S::AbstractVector; l2_cost = 0., kwargs...)
     ξ = zeros(size(X,1),size(X,2),size(X,2))
     for k2 in 1:size(ξ,3)
         for k1 in 1:size(ξ,2)
@@ -91,23 +91,17 @@ function coxph(S::AbstractVector,X::AbstractArray; l2_cost = 0., kwargs...)
     afterXΘ = init_after(X.*zeros(size(X,1)))
     afterξΘ = init_after(ξ.*zeros(size(X,1)))
 
-    f1 = (β) -> cox_f(S, fs, ls, ξ , X, β, l2_cost, alive, afterΘ)
-    h1! = (β,grad,hes) -> cox_h!(grad,hes, S, fs, ls, ξ , X, β, l2_cost,alive, afterΘ, afterXΘ, afterξΘ)
-    return newton_raphson(f1,h1!, zeros(size(X,2)); kwargs...)
+    f1 = (β) -> _cox_f(S, fs, ls, ξ , X, β, l2_cost, alive, afterΘ)
+    h1! = (β,grad,hes) -> _cox_h!(grad,hes, S, fs, ls, ξ , X, β, l2_cost,alive, afterΘ, afterXΘ, afterξΘ)
+    β, neg_ll,grad, hes = newton_raphson(f1,h1!, zeros(size(X,2)); kwargs...)
+    CoxModel("Cox", β, -neg_ll, -grad, hes)
 end
 
-function coxph(formula::Formula, data::DataFrame; l2_cost = 0., kwargs...)
-    sorted_data = sort(data, cols = formula.lhs)
-    M = DataFrames.ModelFrame(formula,sorted_data)
-    S = convert(Array, M.df[:,1])
-    model_matrix = DataFrames.ModelMatrix(M)
-    X = model_matrix.m[:,2:size(model_matrix.m,2)]
-    β, neg_ll,grad, hes =  coxph(S, X; l2_cost = l2_cost, kwargs...)
-    rownms = coefnames(M)[2:end]
-    se = sqrt.(diag(pinv(hes)))
-    z_score = β./se
-    pvalues = 2*cdf(Normal(),-abs.(z_score))
-    coefmat = CoefTable(hcat([β, se, z_score, pvalues]...),
-    ["Estimate", "Std.Error", "z value", "Pr(>|z|)"], rownms, 4)
-    CoxModel("Cox; ", formula, coefmat, M, -neg_ll, -grad, hes)
+function StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
+    index_perm = sortperm(y)
+    y_t = y[index_perm]
+    M_t = M[index_perm, :]
+    _coxph(M_t, y_t; kwargs...)
 end
+
+coxph(M, y; kwargs...) = fit(CoxModel, M, y; kwargs...)

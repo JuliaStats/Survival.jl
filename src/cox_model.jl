@@ -1,18 +1,19 @@
-abstract type SurvivalModel end
-
-function Base.show(io::IO, obj::SurvivalModel)
-    print(io,"\nModel: ", obj.model, obj.formula,"\n\n")
-    print(io,obj.coefmat)
-end
-
-StatsBase.coef(SM::SurvivalModel) = SM.coefmat.cols[1]
-
-struct CoxModel <: SurvivalModel
+struct CoxModel{T <: Real} <: RegressionModel
     model::AbstractString
-    formula::Formula
-    coefmat::CoefTable
-    M::ModelFrame
-    loglik::Float64
-    score::Array{Float64,1}
-    fischer_info::Array{Float64,2}
+    β::Array{T,1}
+    loglik::T
+    score::Array{T,1}
+    fischer_info::Array{T,2}
 end
+
+function StatsBase.coeftable(obj::CoxModel)
+    β, hes = obj.β,obj.fischer_info
+    #rownms = coefnames(obj.mf)[2:end]
+    se = sqrt.(diag(pinv(hes)))
+    z_score = β./se
+    pvalues = 2*cdf(Normal(),-abs.(z_score))
+    coefmat = CoefTable(hcat([β, se, z_score, pvalues]...),
+    ["Estimate", "Std.Error", "z value", "Pr(>|z|)"], ["x$i" for i in 1:length(β)], 4)
+end
+
+StatsBase.coef(obj::CoxModel) = obj.β
