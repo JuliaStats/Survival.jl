@@ -31,8 +31,8 @@ function _cox_h!(grad,hes, S, fs, ls, ξ , X, β, λ, alive, afterΘ, afterXΘ, 
     #compute loglikelihood, score, fischer_info
     #From v0.6 remember to use . notation and do it inplace, possibly using views!
     y = 0.
-    grad[:] = 0.
-    hes[:] = 0.
+    grad .= 0.
+    hes .= 0.
 
     # preallocate
     Z = zeros(size(X,2))
@@ -42,15 +42,13 @@ function _cox_h!(grad,hes, S, fs, ls, ξ , X, β, λ, alive, afterΘ, afterXΘ, 
         for j in (fs[i]):(ls[i])
             ρ = (alive[j]-alive[fs[i]])/(alive[fs[i]]-alive[ls[i]+1])
             ϕ = afterΘ[fs[i]]-ρ*(afterΘ[fs[i]]-afterΘ[ls[i]+1])
+            y -= Xβ[j] -log(ϕ)
             for k in eachindex(Z)
                 @inbounds Z[k] = afterXΘ[fs[i],k]-ρ*(afterXΘ[fs[i],k]-afterXΘ[ls[i]+1,k])
             end
-            for k2 in 1:size(Ξ,2)
-                for k1 in 1:size(Ξ,1)
-                    @inbounds Ξ[k1,k2] = afterξΘ[fs[i],k1,k2]-ρ*(afterξΘ[fs[i],k1,k2]-afterξΘ[ls[i]+1,k1,k2])
-                end
+            for k2 in 1:size(Ξ,2), k1 in 1:size(Ξ,1)
+                @inbounds Ξ[k1,k2] = afterξΘ[fs[i],k1,k2]-ρ*(afterξΘ[fs[i],k1,k2]-afterξΘ[ls[i]+1,k1,k2])
             end
-            y -= Xβ[j] -log(ϕ)
             for k2 in 1:size(Ξ,2)
                 @inbounds grad[k2] -= X[j,k2]
                 @inbounds grad[k2] += Z[k2]/ϕ
@@ -69,14 +67,10 @@ function _cox_h!(grad,hes, S, fs, ls, ξ , X, β, λ, alive, afterΘ, afterXΘ, 
     return y
 end
 
-function _coxph(X::AbstractArray, S::AbstractVector; l2_cost = 0., kwargs...)
+function _coxph(X::AbstractArray{T}, S::AbstractVector; l2_cost = zero(T), kwargs...) where T
     ξ = zeros(size(X,1),size(X,2),size(X,2))
-    for k2 in 1:size(ξ,3)
-        for k1 in 1:size(ξ,2)
-            for i in 1:size(ξ,1)
-                @inbounds ξ[i,k1,k2] = X[i,k1]*X[i,k2]
-            end
-        end
+    for k2 in 1:size(ξ,3), k1 in 1:size(ξ,2), i in 1:size(ξ,1)
+        @inbounds ξ[i,k1,k2] = X[i,k1]*X[i,k2]
     end
 
     # compute first and last!
