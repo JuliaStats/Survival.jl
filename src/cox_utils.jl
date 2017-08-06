@@ -11,10 +11,10 @@ function after(v)
 end
 
 
-function init_after(v)
+function init_after(v::AbstractArray{T}) where T
     newsize = collect(size(v))
     newsize[1] += 1
-    afterv = zeros(eltype(v),newsize...)
+    afterv = zeros(T,newsize...)
     return afterv
 end
 
