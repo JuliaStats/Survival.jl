@@ -1,5 +1,4 @@
 struct CoxModel{T <: Real} <: RegressionModel
-    model::String
     β::Array{T,1}
     loglik::T
     score::Array{T,1}
