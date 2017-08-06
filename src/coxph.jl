@@ -1,39 +1,88 @@
+struct CoxAux{T}
+    X::Array{T,2}
+    ξ::Array{T,3}
+    Xβ::Array{T,1}
+    θ::Array{T,1}
+    Xθ::Array{T,2}
+    ξθ::Array{T,3}
+    afterθ::Array{T,1}
+    afterXθ::Array{T,2}
+    afterξθ::Array{T,3}
+    λ::T
+    fs::Array{Int64,1}
+    ls::Array{Int64,1}
+    alive::Array{Int64,1}
+end
+
+function CoxAux(X::AbstractArray{T}, s::AbstractVector, l2_cost::T) where T
+    ξ = zeros(T, size(X,1),size(X,2),size(X,2))
+    for k2 in 1:size(ξ,3), k1 in 1:size(ξ,2), i in 1:size(ξ,1)
+        @inbounds ξ[i,k1,k2] = X[i,k1]*X[i,k2]
+    end
+
+    Xβ = zeros(T,size(X,1))
+    θ = zeros(T,size(X,1))
+    Xθ = zeros(T, size(X))
+    ξθ =  zeros(T, size(ξ))
+    afterθ = init_after(θ)
+    afterXθ = init_after(Xθ)
+    afterξθ = init_after(ξθ)
+
+    fs = find(firsts(s))
+    ls = find(lasts(s))
+    alive = after(ones(Int64, length(s)))
+    return CoxAux(X, ξ, Xβ, θ, Xθ, ξθ, afterθ, afterXθ, afterξθ, l2_cost, fs, ls, alive)
+end
+
+function update_cox!(c, β, compute_derivatives)
+    A_mul_B!(c.Xβ, c.X, β)
+    c.θ .= exp.(c.Xβ)
+    after!(c.afterθ, c.θ)
+
+    if compute_derivatives
+        c.Xθ .= c.X .* c.θ
+        c.ξθ .= c.ξ .* c.θ
+        after!(c.afterXθ, c.Xθ)
+        after!(c.afterξθ, c.ξθ)
+    end
+    return
+end
+
 # preprocessed already:
 # fs = index first deaths, ls = index last deaths,
 # X is covariates, ξ is covariate covariate transpose
-function _cox_h!(grad,hes, S, fs, ls, ξ , X, β, λ, alive, afterΘ, afterXΘ, afterξΘ, compute_derivatives)
-    #compute relevant quantities for loglikelihood, score, fischer_info
+function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives) where T
+    #compute relevant quantities negative loglikelihood, gradient and hessian
 
-    Xβ = X*β
-    Θ = exp.(Xβ)
-    after!(afterΘ,Θ)
+    update_cox!(c, β, compute_derivatives)
+
+    X, ξ, Xβ, afterθ, afterXθ, afterξθ, λ, fs, ls, alive  =
+        c.X, c.ξ, c.Xβ, c.afterθ, c.afterXθ, c.afterξθ, c.λ, c.fs, c.ls, c.alive
 
 
-    #compute loglikelihood, score, fischer_info
-    y = 0.
+    #compute negative loglikelihood, gradient and hessian
+    y = zero(T)
 
     if compute_derivatives
-        grad .= 0.
-        hes .= 0.
+        grad .= zero(T)
+        hes .= zero(T)
 
-        after!(afterXΘ, X.*Θ)
-        after!(afterξΘ,ξ.*Θ)
         # preallocate
-        Z = zeros(size(X,2))
-        Ξ = zeros(size(X,2),size(X,2))
+        Z = zeros(T, size(X,2))
+        Ξ = zeros(T, size(X,2),size(X,2))
     end
 
     for i in 1:length(fs)
         for j in (fs[i]):(ls[i])
             ρ = (alive[j]-alive[fs[i]])/(alive[fs[i]]-alive[ls[i]+1])
-            ϕ = afterΘ[fs[i]]-ρ*(afterΘ[fs[i]]-afterΘ[ls[i]+1])
+            ϕ = afterθ[fs[i]]-ρ*(afterθ[fs[i]]-afterθ[ls[i]+1])
             y -= Xβ[j] -log(ϕ)
             if compute_derivatives
                 for k in eachindex(Z)
-                    @inbounds Z[k] = afterXΘ[fs[i],k]-ρ*(afterXΘ[fs[i],k]-afterXΘ[ls[i]+1,k])
+                    @inbounds Z[k] = afterXθ[fs[i],k]-ρ*(afterXθ[fs[i],k]-afterXθ[ls[i]+1,k])
                 end
                 for k2 in 1:size(Ξ,2), k1 in 1:size(Ξ,1)
-                    @inbounds Ξ[k1,k2] = afterξΘ[fs[i],k1,k2]-ρ*(afterξΘ[fs[i],k1,k2]-afterξΘ[ls[i]+1,k1,k2])
+                    @inbounds Ξ[k1,k2] = afterξθ[fs[i],k1,k2]-ρ*(afterξθ[fs[i],k1,k2]-afterξθ[ls[i]+1,k1,k2])
                 end
                 for k2 in 1:size(Ξ,2)
                     @inbounds grad[k2] -= X[j,k2]
@@ -56,35 +105,20 @@ function _cox_h!(grad,hes, S, fs, ls, ξ , X, β, λ, alive, afterΘ, afterXΘ, 
     return y
 end
 
-function _coxph(X::AbstractArray{T}, S::AbstractVector; l2_cost = zero(T), kwargs...) where T
-    ξ = zeros(size(X,1),size(X,2),size(X,2))
-    for k2 in 1:size(ξ,3), k1 in 1:size(ξ,2), i in 1:size(ξ,1)
-        @inbounds ξ[i,k1,k2] = X[i,k1]*X[i,k2]
-    end
+function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost = zero(T), kwargs...) where T
+    c = CoxAux(X, s, l2_cost)
 
-    # compute first and last!
-
-    fs = find(firsts(S))
-    ls = find(lasts(S))
-
-    # do optimization
-
-    alive = after(ones(Int64, length(S)))
-    afterΘ = init_after(zeros(size(X,1)))
-    afterXΘ = init_after(X.*zeros(size(X,1)))
-    afterξΘ = init_after(ξ.*zeros(size(X,1)))
-
-    f1 = (β, grad,hes) -> _cox_h!(grad,hes, S, fs, ls, ξ , X, β, l2_cost,alive, afterΘ, afterXΘ, afterξΘ, false)
-    h1! = (β,grad,hes) -> _cox_h!(grad,hes, S, fs, ls, ξ , X, β, l2_cost,alive, afterΘ, afterXΘ, afterξΘ, true)
-    β, neg_ll,grad, hes = newton_raphson(f1,h1!, zeros(size(X,2)); kwargs...)
+    fgh! = (β,grad,hes, compute_derivatives) ->
+        _cox_fgh!(β, grad, hes, c, compute_derivatives)
+    β, neg_ll,grad, hes = newton_raphson(fgh!, zeros(T, size(X,2)); kwargs...)
     CoxModel(β, -neg_ll, -grad, hes)
 end
 
 function StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
     index_perm = sortperm(y)
-    y_t = y[index_perm]
-    M_t = M[index_perm, :]
-    _coxph(M_t, y_t; kwargs...)
+    X = M[index_perm, :]
+    s = y[index_perm]
+    _coxph(X, s; kwargs...)
 end
 
 coxph(M, y; kwargs...) = fit(CoxModel, M, y; kwargs...)

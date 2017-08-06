@@ -1,6 +1,6 @@
 # Compute first and last
-firsts(S) = [S[t].status && (t==1 || S[t] > S[t-1]) for t = 1:length(S)]
-lasts(S) = [S[t].status && (t==length(S) || S[t+1] > S[t]) for t = 1:length(S)]
+firsts(s) = [s[t].status && (t==1 || s[t] > s[t-1]) for t = 1:length(s)]
+lasts(s) = [s[t].status && (t==length(s) || s[t+1] > s[t]) for t = 1:length(s)]
 
 
 # Compute "complementary cumulative sum" on first dimension

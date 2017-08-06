@@ -19,7 +19,7 @@ tol = 1e-8)
 
 using Base.Test
 using JLD
-#creload("Survival")
+creload("Survival")
 
 filepath = joinpath(Pkg.dir("Survival", "test"), "rossi.csv")
 rossi = readtable(filepath)
