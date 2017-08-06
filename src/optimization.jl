@@ -1,7 +1,7 @@
-function newton_raphson(fgh!,x; ρ = 0.5, c = 1e-4, tol = 1e-4, max_iter = 1000)
-    grad= zeros(length(x))
-    hes= zeros(length(x),length(x))
-    y = 0.
+function newton_raphson(fgh!, x::AbstractArray{T}; ρ = 0.5, c = 1e-4, tol = 1e-4, max_iter = 1000) where T
+    grad= zeros(T, length(x))
+    hes= zeros(T, length(x),length(x))
+    y = zero(T)
     for i = 1:max_iter
         y = fgh!(x, grad, hes, true)
         search_dir = -(cholfact(Positive, hes)\grad)

@@ -51,7 +51,7 @@ end
 # preprocessed already:
 # fs = index first deaths, ls = index last deaths,
 # X is covariates, ξ is covariate covariate transpose
-function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives) where T
+function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives)::T where T
     #compute relevant quantities negative loglikelihood, gradient and hessian
 
     update_cox!(c, β, compute_derivatives)
@@ -72,23 +72,23 @@ function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives) where T
         Ξ = zeros(T, size(X,2),size(X,2))
     end
 
-    for i in 1:length(fs)
+    @inbounds for i in 1:length(fs)
         for j in (fs[i]):(ls[i])
             ρ = (alive[j]-alive[fs[i]])/(alive[fs[i]]-alive[ls[i]+1])
             ϕ = afterθ[fs[i]]-ρ*(afterθ[fs[i]]-afterθ[ls[i]+1])
             y -= Xβ[j] -log(ϕ)
             if compute_derivatives
                 for k in eachindex(Z)
-                    @inbounds Z[k] = afterXθ[fs[i],k]-ρ*(afterXθ[fs[i],k]-afterXθ[ls[i]+1,k])
+                    Z[k] = afterXθ[fs[i],k]-ρ*(afterXθ[fs[i],k]-afterXθ[ls[i]+1,k])
                 end
                 for k2 in 1:size(Ξ,2), k1 in 1:size(Ξ,1)
-                    @inbounds Ξ[k1,k2] = afterξθ[fs[i],k1,k2]-ρ*(afterξθ[fs[i],k1,k2]-afterξθ[ls[i]+1,k1,k2])
+                    Ξ[k1,k2] = afterξθ[fs[i],k1,k2]-ρ*(afterξθ[fs[i],k1,k2]-afterξθ[ls[i]+1,k1,k2])
                 end
                 for k2 in 1:size(Ξ,2)
-                    @inbounds grad[k2] -= X[j,k2]
-                    @inbounds grad[k2] += Z[k2]/ϕ
+                    grad[k2] -= X[j,k2]
+                    grad[k2] += Z[k2]/ϕ
                     for k1 in 1:size(Ξ,1)
-                        @inbounds hes[k1, k2] += Ξ[k1,k2]/ϕ - Z[k1]*Z[k2]/ϕ^2
+                        hes[k1, k2] += Ξ[k1,k2]/ϕ - Z[k1]*Z[k2]/ϕ^2
                     end
                 end
             end
