@@ -15,7 +15,15 @@ export
     fit,
     confint,
 
-    coxph
+    coxph,
+    coef,
+    loglikelihood,
+    nullloglikelihood,
+    nobs,
+    dof,
+    vcov,
+    stderr
+
 
 abstract type AbstractEstimator end
 abstract type NonparametricEstimator <: AbstractEstimator end

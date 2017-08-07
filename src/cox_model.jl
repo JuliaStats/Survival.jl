@@ -15,6 +15,10 @@ function StatsBase.coeftable(obj::CoxModel)
     ["Estimate", "Std.Error", "z value", "Pr(>|z|)"], ["x$i" for i in 1:length(β)], 4)
 end
 
+function Base.show(io::IO, obj::CoxModel)
+    println(io, "$(typeof(obj)):\n\nCoefficients:\n", coeftable(obj))
+end
+
 StatsBase.coef(obj::CoxModel) = obj.β
 
 StatsBase.loglikelihood(obj::CoxModel) = obj.loglik
