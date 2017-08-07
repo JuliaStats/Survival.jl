@@ -1,3 +1,9 @@
+function _cox_f(β, c::CoxAux{T})::T where T
+    grad = zeros(T, length(β))
+    hes = zeros(T, length(β), length(β))
+    _cox_fgh!(β, grad,hes, c::CoxAux{T}, false)
+end
+
 function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives)::T where T
     #get relevant quantities to compute negative loglikelihood, gradient and hessian
 
@@ -59,9 +65,16 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost = zero(T), kwarg
     fgh! = (β,grad,hes, compute_derivatives) ->
         _cox_fgh!(β, grad, hes, c, compute_derivatives)
     β, neg_ll,grad, hes = newton_raphson(fgh!, zeros(T, size(X,2)); kwargs...)
-    CoxModel(β, -neg_ll, -grad, hes)
+    CoxModel(c, β, -neg_ll, -grad, hes)
 end
 
+"""
+    fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
+
+Given a matrix M of predictors and a corresponding vector of events, compute the
+Cox proportional hazard model estimate of coefficients. Returns a [`CoxModel`](@ref)
+object.
+"""
 function StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
     index_perm = sortperm(y)
     X = M[index_perm, :]

@@ -146,4 +146,21 @@ end
     @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
 end
 
-include("cox_rossi.jl")
+@testset "Cox" begin
+    filepath = joinpath(Pkg.dir("Survival", "test"), "rossi.csv")
+    rossi = readtable(filepath)
+    rossi[:event] = EventTime.(rossi[:week],rossi[:arrest] .== 1)
+
+    outcome = coxph(@formula(event ~ 0+ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
+    outcome_coefmat = coeftable(outcome)
+
+    filepath_coefs = joinpath(Pkg.dir("Survival", "test"), "expected_coefmat.jld")
+    expected_coefmat = JLD.load(filepath_coefs, "expected_coefmat")
+
+    @test nobs(outcome) == size(rossi, 1)
+    @test dof(outcome) == 7
+    @test loglikelihood(outcome) > nullloglikelihood(outcome)
+    @test all(eig(outcome.model.fischer_info)[1] .> 0)
+    @test norm(outcome.model.score) < 1e-5
+    @test outcome_coefmat.cols[1:3] ≈ expected_coefmat.cols[1:3] atol = 1e-6
+end
