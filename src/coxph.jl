@@ -3,8 +3,8 @@ function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives)::T where T
 
     update_cox!(c, β, compute_derivatives)
 
-    X, ξ, Xβ, θ, Xθ, ξθ, λ, fs, ls, alive  =
-        c.X, c.ξ, c.Xβ, c.θ, c.Xθ, c.ξθ, c.λ, c.fs, c.ls, c.alive
+    X, ξ, Xβ, θ, Xθ, ξθ, λ, fs, ls  =
+        c.X, c.ξ, c.Xβ, c.θ, c.Xθ, c.ξθ, c.λ, c.fs, c.ls
 
 
     #compute negative loglikelihood, gradient and hessian
@@ -20,18 +20,18 @@ function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives)::T where T
 
     @inbounds for i in 1:length(fs)
         for j in (fs[i]):(ls[i])
-            ρ = (alive[j]-alive[fs[i]])/(alive[fs[i]]-alive[ls[i]+1])
-            ϕ = θ.tails[i]-ρ*(θ.chunks[i])
+            ρ = (j-fs[i])/(ls[i] + 1 - fs[i])
+            ϕ = θ.tails[i]-ρ * θ.chunks[i]
             y -= Xβ[j] -log(ϕ)
             if compute_derivatives
                 for k in eachindex(Z)
-                    Z[k] = Xθ.tails[i, k]-ρ*(Xθ.chunks[i, k])
+                    Z[k] = Xθ.tails[i, k] - ρ * Xθ.chunks[i, k]
                 end
                 for k2 in 1:length(β)
                     grad[k2] += Z[k2]/ϕ - X[j,k2]
                     for k1 in 1:k2
-                        Ξ = ξθ.tails[i, k1, k2]-ρ*(ξθ.chunks[i, k1, k2])
-                        hes[k1, k2] += Ξ/ϕ - Z[k1]*Z[k2]/ϕ^2
+                        Ξ = ξθ.tails[i, k1, k2] - ρ * ξθ.chunks[i, k1, k2]
+                        hes[k1, k2] += Ξ/ϕ - Z[k1] * Z[k2]/ϕ^2
                     end
                 end
             end

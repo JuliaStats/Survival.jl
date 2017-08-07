@@ -16,7 +16,6 @@ tol = 1e-8)
 tol = 1e-8)
 
 
-
 using Base.Test
 using JLD
 creload("Survival")
@@ -31,3 +30,5 @@ outcome_coefmat = coeftable(outcome)
 filepath_coefs = joinpath(Pkg.dir("Survival", "test"), "expected_coefmat.jld")
 expected_coefmat = JLD.load(filepath_coefs, "expected_coefmat")
 @test outcome_coefmat.cols[1:3] ≈ expected_coefmat.cols[1:3] atol = 1e-6
+
+outcome_coefmat
