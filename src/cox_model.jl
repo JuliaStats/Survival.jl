@@ -4,6 +4,7 @@ struct CoxModel{T <: Real} <: RegressionModel
     loglik::T
     score::Array{T,1}
     fischer_info::Array{T,2}
+    vcov::Array{T,2}
 end
 
 function StatsBase.coeftable(obj::CoxModel)
@@ -28,6 +29,6 @@ StatsBase.nobs(obj::CoxModel) = size(obj.aux.X, 1)
 
 StatsBase.dof(obj::CoxModel) = length(obj.β)
 
-StatsBase.vcov(obj::CoxModel) = pinv(obj.fischer_info)
+StatsBase.vcov(obj::CoxModel) = obj.vcov
 
 StatsBase.stderr(obj::CoxModel) = sqrt.(diag(vcov(obj)))

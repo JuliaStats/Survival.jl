@@ -65,7 +65,7 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost = zero(T), kwarg
     fgh! = (β,grad,hes, compute_derivatives) ->
         _cox_fgh!(β, grad, hes, c, compute_derivatives)
     β, neg_ll,grad, hes = newton_raphson(fgh!, zeros(T, size(X,2)); kwargs...)
-    CoxModel(c, β, -neg_ll, -grad, hes)
+    CoxModel(c, β, -neg_ll, -grad, hes, pinv(hes))
 end
 
 """

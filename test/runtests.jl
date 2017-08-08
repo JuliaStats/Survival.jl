@@ -161,6 +161,7 @@ end
     @test dof(outcome) == 7
     @test loglikelihood(outcome) > nullloglikelihood(outcome)
     @test all(eig(outcome.model.fischer_info)[1] .> 0)
+    @test outcome.model.fischer_info * vcov(outcome) ≈ eye(7) atol = 1e-10
     @test norm(outcome.model.score) < 1e-5
     @test outcome_coefmat.cols[1:3] ≈ expected_coefmat.cols[1:3] atol = 1e-6
 end
