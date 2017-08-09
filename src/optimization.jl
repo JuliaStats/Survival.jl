@@ -13,6 +13,5 @@ function newton_raphson(fgh!, x::AbstractArray{T}; ρ = one(T)/2, c = 1e-4, tol 
         end
         x .+= search_dir*step_size
     end
-    warn("Reached max iteration number: try increasing `max_iter` or `tol` parameters")
     throw(ConvergenceException(max_iter))
 end

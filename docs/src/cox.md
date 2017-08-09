@@ -6,7 +6,7 @@ The [Cox proportional hazards model](https://en.wikipedia.org/wiki/Proportional_
 \lambda(t|X_i) = \lambda_0(t)\exp(X_i\cdot\beta)
 ```
 
-where $\lambda(t|X_i)$ is the estimated hazard for sample $i$, $\lambda_0$ is the baseline hazard, $X_i$ the vector of covariates for sample $i$ and $\beta$ are the coefficients of the regression.
+where ``\lambda(t|X_i)`` is the estimated hazard for sample ``i``, ``\lambda_0`` is the baseline hazard, ``X_i`` the vector of covariates for sample ``i`` and ``\beta`` are the coefficients of the regression.
 
 ## API
 
