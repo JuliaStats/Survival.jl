@@ -59,6 +59,9 @@ function _cox_fgh!(β, grad, hes, c::CoxAux{T}, compute_derivatives)::T where T
     return y
 end
 
+_coxph(X::AbstractArray{T}, s::AbstractVector; kwargs...) where {T<:Integer} =
+    _coxph(Float64.(X), s::AbstractVector; kwargs...)
+
 function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost = zero(T), kwargs...) where T
     c = CoxAux(X, s, l2_cost)
 

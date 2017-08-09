@@ -153,6 +153,11 @@ end
     outcome = coxph(@formula(event ~ 0+ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
     outcome_coefmat = coeftable(outcome)
 
+    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+ fin+age+race+wexp+mar+paro+prio), rossi)).m
+    outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol = 1e-8, l2_cost = 0)
+    outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi[:event]; tol = 1e-6)
+    outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi[:event]; tol = 1e-6, l2_cost = 0.0)
+
     expected_coefs = [
         -0.379422   0.191379   -1.98256   0.0474;
         -0.0574377  0.0219995  -2.61087   0.0090;
@@ -163,6 +168,9 @@ end
          0.0914971  0.0286485   3.19378   0.0014
     ]
 
+    @test coef(outcome_from_matrix) ≈ coef(outcome) atol = 1e-5
+    @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix32) atol = 1e-5
+    @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix_int) atol = 1e-5
     @test nobs(outcome) == size(rossi, 1)
     @test dof(outcome) == 7
     @test loglikelihood(outcome) > nullloglikelihood(outcome)

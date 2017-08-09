@@ -34,7 +34,7 @@ struct CoxAux{T}
     ls::Array{Int64,1}
 end
 
-function CoxAux(X::AbstractArray{T}, s::AbstractVector, l2_cost::T) where T
+function CoxAux(X::AbstractArray{T}, s::AbstractVector, l2_cost) where T
     fs = find(firsts(s))
     ls = find(lasts(s))
     ξ = zeros(T, size(X,1),size(X,2),size(X,2))
@@ -47,7 +47,7 @@ function CoxAux(X::AbstractArray{T}, s::AbstractVector, l2_cost::T) where T
     Xθ = CoxSum(zeros(T,size(X)), fs, ls)
     ξθ =  CoxSum(zeros(T, size(ξ)), fs, ls)
 
-    return CoxAux(X, ξ, Xβ, θ, Xθ, ξθ,  l2_cost, fs, ls)
+    return CoxAux(X, ξ, Xβ, θ, Xθ, ξθ,  T(l2_cost), fs, ls)
 end
 
 function update_cox!(c::CoxAux, β, compute_derivatives)
