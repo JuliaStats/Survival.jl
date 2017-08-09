@@ -1,6 +1,6 @@
 # Compute first and last
-firsts(s) = [s[t].status && (t==1 || s[t] > s[t-1]) for t = 1:length(s)]
-lasts(s) = [s[t].status && (t==length(s) || s[t+1] > s[t]) for t = 1:length(s)]
+firsts(s) = (s[t].status && (t==1 || s[t] > s[t-1]) for t = 1:length(s))
+lasts(s) = (s[t].status && (t==length(s) || s[t+1] > s[t]) for t = 1:length(s))
 
 
 struct CoxSum{T,N}
@@ -11,14 +11,15 @@ struct CoxSum{T,N}
 end
 
 function CoxSum(values::Array{T,N}, fs, ls) where {T, N}
-    sums = zeros(T, size(values,1)+1, Base.tail(size(values))...)
-    chunks = zeros(T, length(fs), Base.tail(size(values))...)
-    tails = zeros(T, length(fs), Base.tail(size(values))...)
-    CoxSum(values, sums, chunks, tails)
+    tailsize = Base.tail(size(values))
+    sums = zeros(T, size(values,1)+1, tailsize...)
+    chunks = zeros(T, length(fs), tailsize...)
+    CoxSum(values, sums, chunks, copy(chunks))
 end
 
 
-# fs = index first deaths, ls = index last deaths,
+# fs, ls = indices first and last events in a simultaneaous group
+# if there are no ties, fs == ls
 # X is covariates, ξ is covariate covariate transpose
 
 struct CoxAux{T}

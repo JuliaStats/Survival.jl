@@ -1,7 +1,6 @@
 using Survival
 using Compat
 using Compat.Test
-using JLD
 using DataFrames
 
 @testset "Event times" begin
@@ -154,8 +153,15 @@ end
     outcome = coxph(@formula(event ~ 0+ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
     outcome_coefmat = coeftable(outcome)
 
-    filepath_coefs = joinpath(Pkg.dir("Survival", "test"), "expected_coefmat.jld")
-    expected_coefmat = JLD.load(filepath_coefs, "expected_coefmat")
+    expected_coefs = [
+        -0.379422   0.191379   -1.98256   0.0474;
+        -0.0574377  0.0219995  -2.61087   0.0090;
+         0.3139     0.307993    1.01918   0.3081;
+        -0.149796   0.212224   -0.705837  0.4803;
+        -0.433704   0.381868   -1.13574   0.2561;
+        -0.0848711  0.195757   -0.433554  0.6646;
+         0.0914971  0.0286485   3.19378   0.0014
+    ]
 
     @test nobs(outcome) == size(rossi, 1)
     @test dof(outcome) == 7
@@ -163,5 +169,5 @@ end
     @test all(eig(outcome.model.fischer_info)[1] .> 0)
     @test outcome.model.fischer_info * vcov(outcome) ≈ eye(7) atol = 1e-10
     @test norm(outcome.model.score) < 1e-5
-    @test outcome_coefmat.cols[1:3] ≈ expected_coefmat.cols[1:3] atol = 1e-6
+    @test hcat(outcome_coefmat.cols[1:3]...) ≈ expected_coefs[:, 1:3] atol = 1e-5
 end

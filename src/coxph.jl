@@ -1,10 +1,10 @@
 function _cox_f(β, c::CoxAux{T})::T where T
     grad = zeros(T, length(β))
     hes = zeros(T, length(β), length(β))
-    _cox_fgh!(β, grad,hes, c::CoxAux{T}, false)
+    _cox_fgh!(β, grad, hes, c::CoxAux{T}, false)
 end
 
-function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives)::T where T
+function _cox_fgh!(β, grad, hes, c::CoxAux{T}, compute_derivatives)::T where T
     #get relevant quantities to compute negative loglikelihood, gradient and hessian
 
     update_cox!(c, β, compute_derivatives)
@@ -28,13 +28,13 @@ function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives)::T where T
         for j in (fs[i]):(ls[i])
             ρ = (j-fs[i])/(ls[i] + 1 - fs[i])
             ϕ = θ.tails[i]-ρ * θ.chunks[i]
-            y -= Xβ[j] -log(ϕ)
+            y -= Xβ[j] - log(ϕ)
             if compute_derivatives
                 for k in eachindex(Z)
                     Z[k] = Xθ.tails[i, k] - ρ * Xθ.chunks[i, k]
                 end
                 for k2 in 1:length(β)
-                    grad[k2] += Z[k2]/ϕ - X[j,k2]
+                    grad[k2] += Z[k2]/ϕ - X[j, k2]
                     for k1 in 1:k2
                         Ξ = ξθ.tails[i, k1, k2] - ρ * ξθ.chunks[i, k1, k2]
                         hes[k1, k2] += Ξ/ϕ - Z[k1] * Z[k2]/ϕ^2
@@ -47,7 +47,7 @@ function _cox_fgh!(β, grad,hes, c::CoxAux{T}, compute_derivatives)::T where T
 
     if compute_derivatives
         for k1 in 1:length(β)
-            grad[k1] +=  2*λ*β[k1]
+            grad[k1] += 2*λ*β[k1]
             hes[k1,k1] +=  2*λ
         end
         for k2 in 1:length(β)
@@ -62,9 +62,9 @@ end
 function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost = zero(T), kwargs...) where T
     c = CoxAux(X, s, l2_cost)
 
-    fgh! = (β,grad,hes, compute_derivatives) ->
+    fgh! = (β, grad, hes, compute_derivatives) ->
         _cox_fgh!(β, grad, hes, c, compute_derivatives)
-    β, neg_ll,grad, hes = newton_raphson(fgh!, zeros(T, size(X,2)); kwargs...)
+    β, neg_ll, grad, hes = newton_raphson(fgh!, zeros(T, size(X,2)); kwargs...)
     CoxModel(c, β, -neg_ll, -grad, hes, pinv(hes))
 end
 
