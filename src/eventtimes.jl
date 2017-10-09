@@ -6,14 +6,14 @@
     EventTime{T}
 
 Immutable object containing the real-valued time to an event as well as an indicator of
-whether the time corresponds to an observed event or right censoring.
+whether the time corresponds to an observed event (`true`) or right censoring (`false`).
 """
 struct EventTime{T<:Real}
     time::T
     status::Bool
 end
 
-EventTime(time::T) where {T<:Real} = EventTime{T}(time, false)
+EventTime(time::T) where {T<:Real} = EventTime{T}(time, true)
 
 ## Overloaded Base functions
 

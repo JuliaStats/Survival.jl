@@ -5,14 +5,15 @@ using Compat.Test
 @testset "Event times" begin
     @test isevent(EventTime{Int}(44, true))
     @test !isevent(EventTime(3.2, false))
-    @test !isevent(EventTime(2.5f0))
+    @test isevent(EventTime(2.5f0))
 
-    @test iscensored(EventTime(3))
-    @test !iscensored(EventTime(2.1, true))
+    @test !iscensored(EventTime(3))
+    @test iscensored(EventTime(2.1, false))
 
     @test eltype(EventTime(1)) == Int
 
-    @test sprint(show, EventTime(1)) == "1+"
+    @test sprint(show, EventTime(1, true)) == "1"
+    @test sprint(show, EventTime(1, false)) == "1+"
 
     @test convert(Int, EventTime(1)) == 1
     @test convert(EventTime, 1) == EventTime(1)
