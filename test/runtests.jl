@@ -16,6 +16,8 @@ using Compat.Test
     @test sprint(show, EventTime(1, false)) == "1+"
 
     @test convert(Int, EventTime(1)) == 1
+    @test convert(Int, EventTime(1, false)) == 1
+    @test convert(Float64, EventTime(1)) == 1.0
     @test convert(EventTime, 1) == EventTime(1)
 
     @test isless(EventTime(1), EventTime(1, false))
