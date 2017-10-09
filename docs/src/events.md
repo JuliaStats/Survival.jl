@@ -11,9 +11,8 @@ assume that a seizure would have occurred eventually, but you don't know when ex
 In this case the event time is *right censored*; the true event time is unknown, all
 you know is that it exceeds the observed time.
 
-To conveniently store right censored data, two types are provided for convenience.
+A dedicated type is provided to conveniently store right censored data.
 
 ```@docs
 Survival.EventTime
-Survival.EventTimeVector
 ```

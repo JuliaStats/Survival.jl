@@ -2,83 +2,25 @@ using Survival
 using Base.Test
 
 @testset "Event times" begin
-    @testset "EventTime" begin
-        @test isevent(EventTime{Int}(44, true))
-        @test !isevent(EventTime(3.2, false))
-        @test !isevent(EventTime(2.5f0))
+    @test isevent(EventTime{Int}(44, true))
+    @test !isevent(EventTime(3.2, false))
+    @test !isevent(EventTime(2.5f0))
 
-        @test iscensored(EventTime(3))
-        @test !iscensored(EventTime(2.1, true))
+    @test iscensored(EventTime(3))
+    @test !iscensored(EventTime(2.1, true))
 
-        @test eltype(EventTime(1)) == Int
+    @test eltype(EventTime(1)) == Int
 
-        @test sprint(show, EventTime(1)) == "1+"
+    @test sprint(show, EventTime(1)) == "1+"
 
-        @test convert(Int, EventTime(1)) == 1
-        @test convert(EventTime, 1) == EventTime(1)
-    end
+    @test convert(Int, EventTime(1)) == 1
+    @test convert(EventTime, 1) == EventTime(1)
 
-    @testset "EventTimeVector" begin
-        let x = EventTimeVector{Float32}([3.4f0, 2.1f0], falses(2))
-            @test eltype(x) == EventTime{Float32}
-            @test length(x) == 2
-            @test endof(x) == 2
-            @test size(x) == (2,)
-            @test eachindex(x) == Base.OneTo(2)
-            @test indices(x) == (Base.OneTo(2),)
-            @test !isempty(x)
-            @test Base.iteratorsize(x) == Base.HasShape()
-            @test Base.iteratoreltype(x) == Base.HasEltype()
-            @test Base.IndexStyle(x) == Base.IndexLinear()
-            @test Base.IndexStyle(typeof(x)) == Base.IndexLinear()
-            @test start(x) == 1
-            @test next(x, 1) == (EventTime(3.4f0, false), 2)
-            @test !done(x, 1)
-            @test x[1] == EventTime(3.4f0, false)
-            @test x[1:2] == x
+    @test isless(EventTime(1), EventTime(1, false))
+    @test !isless(EventTime(2), EventTime(1, false))
 
-            xc = x[:]
-            @test xc == x && xc !== x
-            cx = copy(x)
-            @test cx == x && cx !== x
-
-            x[1] = EventTime(3.5f0, true)
-            @test x == EventTimeVector([3.5f0, 2.1f0], [true, false])
-            x[2:2] = EventTime(6.7f0)
-            @test x == EventTimeVector([3.5f0, 6.7f0], [true, false])
-
-            @test any(isevent, x)
-            @test !all(isevent, x)
-            @test any(iscensored, x)
-            @test !all(iscensored, x)
-
-            @test isevent.(x) == [true, false]
-            @test iscensored.(x) == [false, true]
-
-            @test sort(x) == x
-        end
-
-        @test_throws DimensionMismatch EventTimeVector([1,2,3], [true])
-
-        @test EventTimeVector([EventTime(1), EventTime(2)]) == EventTimeVector([1,2], falses(2))
-
-        let x = EventTimeVector([1, 2])
-            push!(x, EventTime(3))
-            @test x == EventTimeVector([1, 2, 3])
-
-            append!(x, EventTimeVector([4, 5]))
-            @test x == EventTimeVector([1, 2, 3, 4, 5])
-
-            prepend!(x, EventTimeVector([6]))
-            @test x == EventTimeVector([6; 1:5])
-
-            sort!(x)
-            @test x == EventTimeVector(collect(1:6))
-
-            y = EventTimeVector([7])
-            @test [x; y] == EventTimeVector(collect(1:7))
-            @test [y; y; y] == EventTimeVector([7, 7, 7])
-        end
+    let x = [EventTime(2, false), EventTime(1), EventTime(2)]
+        @test sort(x) == [EventTime(1), EventTime(2), EventTime(2, false)]
     end
 end
 
@@ -189,13 +131,11 @@ end
     @test jl_lower ≈ r_lower atol=1e-6
     @test jl_upper ≈ r_upper atol=1e-6
 
-    km_ev = fit(KaplanMeier, EventTimeVector(t, BitVector(s)))
-    @test km_ev.times == km.times
-    @test km_ev.natrisk == km.natrisk
-    @test km_ev.nevents == km.nevents
-    @test km_ev.ncensor == km.ncensor
-    @test km_ev.survival ≈ jl_surv
-
     @test_throws DimensionMismatch fit(KaplanMeier, [1, 2], [true])
     @test_throws ArgumentError fit(KaplanMeier, Float64[], Bool[])
+
+    km_et = fit(KaplanMeier, EventTime.(t, Bool.(s)))
+    @test all(f->getfield(km, f) ≈ getfield(km_et, f), fieldnames(KaplanMeier))
+
+    @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
 end

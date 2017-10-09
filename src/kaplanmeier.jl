@@ -104,10 +104,15 @@ function StatsBase.fit(::Type{KaplanMeier},
     return _km(t, s)
 end
 
-function StatsBase.fit(::Type{KaplanMeier}, ev::EventTimeVector)
-    isempty(ev) && throw(ArgumentError("the sample must be nonempty"))
-    ev_sorted = sort(ev)
-    return _km(ev_sorted.times, ev_sorted.status)
+function StatsBase.fit(::Type{KaplanMeier}, ets::AbstractVector{<:EventTime})
+    length(ets) > 0 || throw(ArgumentError("the sample must be nonempty"))
+    x = sort(ets)
+    # TODO: Refactor, since iterating over the EventTime objects directly in
+    # the _km loop may actually be easier/more efficient than working with
+    # the times and statuses as separate vectors. Plus it might be nice to
+    # make this method the One True Method™ so that folks are encouraged to
+    # use EventTimes instead of raw values.
+    return _km(map(t->t.time, x), BitVector(map(t->t.status, x)))
 end
 
 """
