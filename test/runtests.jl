@@ -1,5 +1,6 @@
 using Survival
-using Base.Test
+using Compat
+using Compat.Test
 
 @testset "Event times" begin
     @test isevent(EventTime{Int}(44, true))
