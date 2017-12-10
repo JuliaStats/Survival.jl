@@ -1,7 +1,7 @@
 using Survival
 using Compat
 using Compat.Test
-using DataFrames
+using DataFrames, StatsModels, StatsBase, CSV
 
 @testset "Event times" begin
     @test isevent(EventTime{Int}(44, true))
@@ -147,13 +147,13 @@ end
 
 @testset "Cox" begin
     filepath = joinpath(Pkg.dir("Survival", "test"), "rossi.csv")
-    rossi = readtable(filepath)
+    rossi = CSV.read(filepath)
     rossi[:event] = EventTime.(rossi[:week],rossi[:arrest] .== 1)
 
-    outcome = coxph(@formula(event ~ 0+ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
+    outcome = coxph(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
     outcome_coefmat = coeftable(outcome)
 
-    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+ fin+age+race+wexp+mar+paro+prio), rossi)).m
+    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi)).m
     outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol = 1e-8, l2_cost = 0)
     outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi[:event]; tol = 1e-5)
     outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi[:event]; tol = 1e-6, l2_cost = 0.0)

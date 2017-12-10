@@ -95,7 +95,7 @@ function StatsBase.coeftable(obj::CoxModel)
     β = coef(obj)
     se = stderr(obj)
     z_score = β./se
-    pvalues = 2*cdf(Normal(), -abs.(z_score))
+    pvalues = 2 .* cdf.(Normal(), -abs.(z_score))
     coefmat = CoefTable(hcat([β, se, z_score, pvalues]...),
     ["Estimate", "Std.Error", "z value", "Pr(>|z|)"], ["x$i" for i in 1:length(β)], 4)
 end
