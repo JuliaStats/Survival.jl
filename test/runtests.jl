@@ -146,14 +146,14 @@ end
 end
 
 @testset "Cox" begin
-    filepath = joinpath(Pkg.dir("Survival", "test"), "rossi.csv")
+    filepath = joinpath(@__DIR__, "rossi.csv")
     rossi = CSV.read(filepath)
     rossi[:event] = EventTime.(rossi[:week],rossi[:arrest] .== 1)
 
-    outcome = coxph(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
+    outcome = coxph(@formula(event ~ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
     outcome_coefmat = coeftable(outcome)
 
-    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi)).m
+    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ fin+age+race+wexp+mar+paro+prio), rossi, intercept = false)).m
     outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol = 1e-8, l2_cost = 0)
     outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi[:event]; tol = 1e-5)
     outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi[:event]; tol = 1e-6, l2_cost = 0.0)
@@ -178,4 +178,20 @@ end
     @test outcome.model.fischer_info * vcov(outcome) ≈ eye(7) atol = 1e-10
     @test norm(outcome.model.score) < 1e-5
     @test hcat(outcome_coefmat.cols[1:3]...) ≈ expected_coefs[:, 1:3] atol = 1e-5
+
+    outcome_fin = coxph(@formula(event ~ fin), rossi; tol = 1e-8)
+    @test coeftable(outcome_fin).rownms == ["fin"]
+    outcome_finrace = coxph(@formula(event ~ fin*race), rossi; tol = 1e-8)
+    @test coeftable(outcome_finrace).rownms == ["fin", "race","fin & race"]
+    categorical!(rossi, :fin)
+    outcome_fincat = coxph(@formula(event ~ fin), rossi; tol = 1e-8)
+    @test coeftable(outcome_fincat).rownms == ["fin: 1"]    
+    @test coef(outcome_fin) ≈ coef(outcome_fincat) atol = 1e-8
+    outcome_fincatrace = coxph(@formula(event ~ fin*race), rossi; tol = 1e-8)
+    @test coeftable(outcome_fincatrace).rownms == ["fin: 1", "race","fin: 1 & race"]
+    @test coef(outcome_fincatrace) ≈ coef(outcome_finrace) atol = 1e-8
+    categorical!(rossi, :race)
+    outcome_fincatracecat = coxph(@formula(event ~ fin*race), rossi; tol = 1e-8)
+    @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
+    @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol = 1e-8
 end
