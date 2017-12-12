@@ -2,7 +2,7 @@ __precompile__()
 
 module Survival
 
-using StatsBase
+using StatsBase, StatsModels
 using Distributions
 using PositiveFactorizations
 
