@@ -153,7 +153,7 @@ end
     outcome = coxph(@formula(event ~ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
     outcome_coefmat = coeftable(outcome)
 
-    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ fin+age+race+wexp+mar+paro+prio), rossi, intercept = false)).m
+    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi)).m
     outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol = 1e-8, l2_cost = 0)
     outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi[:event]; tol = 1e-5)
     outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi[:event]; tol = 1e-6, l2_cost = 0.0)
