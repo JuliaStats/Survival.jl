@@ -190,7 +190,7 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost = zero(T), kwarg
     CoxModel(c, β, -neg_ll, -grad, hes, pinv(hes))
 end
 
-StatsModels.supports_intercept(::Type{CoxModel}) = false
+StatsModels.drop_intercept(::Type{CoxModel}) = true
 
 """
     fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
