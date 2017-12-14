@@ -7,7 +7,6 @@ using Distributions
 
 export
     EventTime,
-    EventTimeVector,
     isevent,
     iscensored,
 
