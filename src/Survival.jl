@@ -15,6 +15,7 @@ export
     fit,
     confint,
 
+    CoxModel,
     coxph,
     coef,
     loglikelihood,

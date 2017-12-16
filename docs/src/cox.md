@@ -11,15 +11,7 @@ where ``\lambda(t|X_i)`` is the estimated hazard for sample ``i``, ``\lambda_0``
 ## API
 
 ```@docs
-Survival.coxph
-StatsBase.fit
-StatsBase.coef,
-StatsBase.loglikelihood,
-StatsBase.nullloglikelihood,
-StatsBase.nobs,
-StatsBase.dof,
-StatsBase.vcov,
-StatsBase.stderr
+StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
 ```
 
 ## References
