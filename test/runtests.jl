@@ -195,3 +195,29 @@ end
     @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
     @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol = 1e-8
 end
+
+@testset "Newton-Raphson" begin
+    function fgh!(x, grad, hes, compute_ders)
+        if compute_ders
+            grad[1] = 2exp(x[1])*(exp(x[1]) - 1)
+            hes[1,1] = 2exp(x[1])*(2exp(x[1]) - 1)
+        end
+        (exp(x[1]) - 1)^2
+    end
+    x, y, grad, hes = Survival.newton_raphson(fgh!, [2.2], tol = 1e-5)
+    @test x ≈ [0] atol = 1e-5
+    @test y ≈ 0 atol = 1e-5
+    @test grad ≈ [0] atol = 1e-5
+    @test hes ≈ [2] atol = 1e-5
+    @test_throws ConvergenceException Survival.newton_raphson(fgh!, [2.2], max_iter = 2)
+
+    function wrong_fgh!(x, grad, hes, compute_ders)
+        if compute_ders
+            grad[1] = -2exp(x[1])*(exp(x[1]) - 1) # wrong sign
+            hes[1,1] = 2exp(x[1])*(2exp(x[1]) - 1)
+        end
+        (exp(x[1]) - 1)^2
+    end
+    @test_throws ErrorException Survival.newton_raphson(wrong_fgh!, [2.2])
+
+end
