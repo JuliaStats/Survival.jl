@@ -24,7 +24,9 @@ using Greenwood's formula:
 
 ```@docs
 Survival.KaplanMeier
-StatsBase.fit
+StatsBase.fit(::Type{KaplanMeier},
+              times::AbstractVector{T},
+              status::AbstractVector{<:Integer}) where {T}
 StatsBase.confint
 ```
 

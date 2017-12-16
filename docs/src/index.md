@@ -18,6 +18,7 @@ Pkg.clone("https://github.com/ararslan/Survival.jl.git")
 Pages = [
     "events.md",
     "km.md",
+    "cox.md",
 ]
 Depth = 1
 ```
