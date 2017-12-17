@@ -146,12 +146,28 @@ end
 end
 
 @testset "Cox" begin
-    filepath = joinpath(@__DIR__, "rossi.csv")
+    filepath = joinpath(@__DIR__, "data", "rossi.csv")
     rossi = CSV.read(filepath)
     rossi[:event] = EventTime.(rossi[:week],rossi[:arrest] .== 1)
 
     outcome = coxph(@formula(event ~ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
     outcome_coefmat = coeftable(outcome)
+
+    @test sprint(show, outcome) == """
+        StatsModels.DataFrameRegressionModel{Survival.CoxModel{Float64},Array{Float64,2}}
+
+        Formula: event ~ fin + age + race + wexp + mar + paro + prio
+
+        Coefficients:
+                Estimate Std.Error   z value Pr(>|z|)
+        fin    -0.379422  0.191379  -1.98256   0.0474
+        age   -0.0574377 0.0219995  -2.61087   0.0090
+        race      0.3139  0.307993   1.01918   0.3081
+        wexp   -0.149796  0.212224 -0.705837   0.4803
+        mar    -0.433704  0.381868  -1.13574   0.2561
+        paro  -0.0848711  0.195757 -0.433554   0.6646
+        prio   0.0914971 0.0286485   3.19378   0.0014
+        """
 
     coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi)).m
     outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol = 1e-8, l2_cost = 0)
