@@ -146,7 +146,7 @@ end
 end
 
 @testset "Cox" begin
-    filepath = joinpath(@__DIR__, "rossi.csv")
+    filepath = joinpath(@__DIR__, "data", "rossi.csv")
     rossi = CSV.read(filepath)
     rossi[:event] = EventTime.(rossi[:week],rossi[:arrest] .== 1)
 
