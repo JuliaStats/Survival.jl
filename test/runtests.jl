@@ -153,6 +153,25 @@ end
     outcome = coxph(@formula(event ~ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
     outcome_coefmat = coeftable(outcome)
 
+    regressor_matrix = Array(rossi[[:fin, :age, :race, :wexp, :mar, :paro, :prio]])
+    event_vector = rossi[:event]
+
+    outcome_without_formula = coxph(regressor_matrix, event_vector)
+
+    @test sprint(show, outcome_without_formula) == """
+        Survival.CoxModel{Float64}
+
+        Coefficients:
+               Estimate Std.Error   z value Pr(>|z|)
+        x1    -0.379416  0.191379  -1.98253   0.0474
+        x2   -0.0574299 0.0219988  -2.61059   0.0090
+        x3      0.31392  0.307995   1.01924   0.3081
+        x4     -0.14981  0.212226 -0.705898   0.4803
+        x5    -0.433724   0.38187  -1.13579   0.2560
+        x6   -0.0848615  0.195756 -0.433505   0.6646
+        x7     0.091521 0.0286469    3.1948   0.0014
+        """
+
     coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi)).m
     outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol = 1e-8, l2_cost = 0)
     outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi[:event]; tol = 1e-5)

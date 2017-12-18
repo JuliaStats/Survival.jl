@@ -100,8 +100,12 @@ function StatsBase.coeftable(obj::CoxModel)
     ["Estimate", "Std.Error", "z value", "Pr(>|z|)"], ["x$i" for i in 1:length(β)], 4)
 end
 
-function Base.show(io::IO, obj::CoxModel)
-    println(io, "$(typeof(obj)):\n\nCoefficients:\n", coeftable(obj))
+function Base.show(io::IO, model::CoxModel)
+    ct = coeftable(model)
+    println(io, "$(typeof(model))")
+    println(io)
+    println(io,"Coefficients:")
+    show(io, ct)
 end
 
 StatsBase.coef(obj::CoxModel) = obj.β
