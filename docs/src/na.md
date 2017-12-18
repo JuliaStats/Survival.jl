@@ -1,33 +1,33 @@
-# Kaplan-Meier Estimator
+# Nelson-Aalen Estimator
 
-The [Kaplan-Meier estimator](https://en.wikipedia.org/wiki/Kaplan-Meier_estimator)
-is a nonparametric estimator of the survivor function, i.e. the probability of survival
+The [Nelson-Aalen estimator](https://en.wikipedia.org/wiki/Kaplan-Meier_estimator)
+is a nonparametric estimator of the cumulative hazard function, i.e. the probability of survival
 beyond a given time.
 
 The estimate is given by
 
 ```math
-\hat{S}(t) = \prod_{i: t_i < t} \left( 1 - \frac{d_i}{n_i} \right)
+\hat{S}(t) = \sum_{i: t_i < t} \frac{d_i}{n_i}
 ```
 
 where ``d_i`` is the number of observed events at time ``t_i`` and ``n_i`` is the
 number of subjects at risk for the event just before time ``t_i``.
 
 The pointwise standard error of the log of the survivor function can be computed
-using Greenwood's formula:
+directly as the standard error or a Bernoulli random variable with `d_i` successes
+from `n_i` samples:
 
 ```math
-\text{SE}(\log \hat{S}(t)) = \sqrt{\sum_{i: t_i < t} \frac{d_i}{n_i (n_i - d_i)}}
+\text{SE}(\hat{S}(t)) = \sqrt{\sum_{i: t_i < t} \frac{d_i(n_i-d_i)}{n_i^3}}
 ```
 
 ## API
 
 ```@docs
-Survival.KaplanMeier
+Survival.NelsonAalen
 StatsBase.fit(::Type{S},
               times::AbstractVector{T},
               status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator, T}
-StatsBase.confint
 ```
 
 ## References

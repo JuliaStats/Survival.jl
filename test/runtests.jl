@@ -169,7 +169,7 @@ end
     @test na.ncensor == km.ncensor
     @test na.natrisk == km.natrisk
     @test exp.(-na.chaz[1:50]) ≈ km.survival[1:50] rtol = 1e-2
-    @test na.stderr ≈ km.stderr atol = 1e-8
+    @test na.stderr[1:50] ≈ km.stderr[1:50] rtol = 2e-2
 
 end
 

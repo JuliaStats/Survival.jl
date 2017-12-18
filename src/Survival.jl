@@ -11,6 +11,7 @@ export
     isevent,
     iscensored,
 
+    NonparametricEstimator,
     KaplanMeier,
     NelsonAalen,
     fit,

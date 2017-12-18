@@ -60,8 +60,8 @@ end
 
 Given a vector of times to events and a corresponding vector of indicators that
 dictate whether each time is an observed event or is right censored, compute the
-Kaplan-Meier estimate of the survivor function. Returns a [`KaplanMeier`](@ref)
-object.
+model of type `S`. Return an object of type `S`: [`KaplanMeier`](@ref) and 
+[`NelsonAalen`](@ref) are supported so far.
 """
 function StatsBase.fit(::Type{S},
                        times::AbstractVector{T},

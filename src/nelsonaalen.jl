@@ -2,7 +2,7 @@
     NelsonAalen
 
 An immutable type containing cumulative hazard function estimates computed
-using the Kaplan-Meier method.
+using the Nelson-Aalen method.
 The type has the following fields:
 
 * `times`: Distinct event times
@@ -27,4 +27,4 @@ estimator_start(::Type{NelsonAalen}) = 0.0  # Estimator starting point
 stderr_start(::Type{NelsonAalen}) = 0.0 # StdErr starting point
 
 estimator_update(::Type{NelsonAalen}, es, dᵢ, nᵢ) = es + dᵢ / nᵢ # Estimator update rule
-stderr_update(::Type{NelsonAalen}, gw, dᵢ, nᵢ) = gw + dᵢ / (nᵢ * (nᵢ - dᵢ)) # StdErr update rule
+stderr_update(::Type{NelsonAalen}, gw, dᵢ, nᵢ) = gw + dᵢ * (nᵢ - dᵢ) / (nᵢ^3) # StdErr update rule
