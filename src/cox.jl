@@ -196,7 +196,7 @@ StatsModels.drop_intercept(::Type{CoxModel}) = true
     fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
 
 Given a matrix `M` of predictors and a corresponding vector of events, compute the
-Cox proportional hazard model estimate of coefficients. Returns a [`CoxModel`](@ref)
+Cox proportional hazard model estimate of coefficients. Returns a `CoxModel`
 object.
 """
 function StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)

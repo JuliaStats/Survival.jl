@@ -1,6 +1,7 @@
 using Survival
 using Compat
 using Compat.Test
+using Distributions
 using DataFrames, StatsModels, StatsBase, CSV
 
 @testset "Event times" begin
@@ -144,6 +145,42 @@ end
 
     @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
 end
+
+@testset "Nelson-Aalen" begin
+    t = [
+        310, 361, 654, 728,  61,  81, 520, 473, 107, 122, 965, 731, 153, 433, 145,  95, 765,
+        735,   5, 687, 345, 444,  60, 208, 821, 305, 226, 426, 705, 363, 167, 641, 740, 245,
+        588, 166, 559, 450, 529, 351, 201, 524, 199, 550, 551, 543, 293, 511, 511, 371, 201,
+         62, 356, 340, 315, 182, 364, 376, 384, 268, 266, 194, 348, 382, 296, 186, 145, 269,
+        350, 272, 292, 332, 285, 243, 276,  79, 240, 202, 235, 224, 239, 173, 252,  92, 192,
+        211, 175, 203, 105, 177,
+    ]
+    s = [
+        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 1, 1, 1,
+        1, 1, 1, 1, 0, 1, 0, 1, 0, 1, 0, 1, 1, 1, 1, 1, 0, 0, 1, 0, 0, 1, 1, 1, 0, 1, 0, 1,
+        0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
+        0, 0, 0, 0, 0, 0,
+    ]
+    
+    na = fit(NelsonAalen, t, s)
+    km = fit(KaplanMeier, t, s)
+    
+    @test na.times == km.times
+    @test na.nevents == km.nevents
+    @test na.ncensor == km.ncensor
+    @test na.natrisk == km.natrisk
+    @test exp.(-na.chaz[1:50]) ≈ km.survival[1:50] rtol = 1e-2
+    @test na.stderr[1:50] ≈ km.stderr[1:50] rtol = 2e-2
+    na_conf = confint(na)
+    na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
+    @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.025, length(na.chaz)) rtol = 1e-8
+    @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.975, length(na.chaz)) rtol = 1e-8
+    na_conf = confint(na, 0.01)
+    na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
+    @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.005, length(na.chaz)) rtol = 1e-8
+    @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.995, length(na.chaz)) rtol = 1e-8
+end
+
 
 @testset "Cox" begin
     filepath = joinpath(@__DIR__, "rossi.csv")

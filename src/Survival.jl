@@ -11,7 +11,9 @@ export
     isevent,
     iscensored,
 
+    NonparametricEstimator,
     KaplanMeier,
+    NelsonAalen,
     fit,
     confint,
 
@@ -30,7 +32,9 @@ abstract type AbstractEstimator end
 abstract type NonparametricEstimator <: AbstractEstimator end
 
 include("eventtimes.jl")
+include("estimator.jl")
 include("kaplanmeier.jl")
+include("nelsonaalen.jl")
 include("cox.jl")
 include("optimization.jl")
 

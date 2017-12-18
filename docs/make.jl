@@ -10,6 +10,7 @@ makedocs(
         "Home" => "index.md",
         "Event Times" => "events.md",
         "Kaplan-Meier" => "km.md",
+        "Nelson-Aalen" => "na.md",
         "Cox" => "cox.md",
     ],
 )
