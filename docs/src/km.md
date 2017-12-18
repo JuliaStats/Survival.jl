@@ -27,7 +27,7 @@ Survival.KaplanMeier
 StatsBase.fit(::Type{S},
               times::AbstractVector{T},
               status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator, T}
-StatsBase.confint
+StatsBase.confint(km::KaplanMeier, α::Float64=0.05)
 ```
 
 ## References

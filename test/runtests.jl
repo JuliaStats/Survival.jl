@@ -1,6 +1,7 @@
 using Survival
 using Compat
 using Compat.Test
+using Distributions
 using DataFrames, StatsModels, StatsBase, CSV
 
 @testset "Event times" begin
@@ -170,7 +171,14 @@ end
     @test na.natrisk == km.natrisk
     @test exp.(-na.chaz[1:50]) ≈ km.survival[1:50] rtol = 1e-2
     @test na.stderr[1:50] ≈ km.stderr[1:50] rtol = 2e-2
-
+    na_conf = confint(na)
+    na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
+    @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.025, length(na.chaz)) rtol = 1e-8
+    @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.975, length(na.chaz)) rtol = 1e-8
+    na_conf = confint(na, 0.01)
+    na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
+    @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.005, length(na.chaz)) rtol = 1e-8
+    @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.995, length(na.chaz)) rtol = 1e-8
 end
 
 

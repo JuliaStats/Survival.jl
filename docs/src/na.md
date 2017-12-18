@@ -28,14 +28,10 @@ Survival.NelsonAalen
 StatsBase.fit(::Type{S},
               times::AbstractVector{T},
               status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator, T}
+StatsBase.confint(na::NelsonAalen, α::Float64=0.05)
 ```
 
 ## References
 
-* Kaplan, E. L., and Meier, P. (1958). *Nonparametric Estimation from Incomplete
-  Observations*. Journal of the American Statistical Association, 53(282), 457-481.
-  doi:10.2307/2281868
-
-* Greenwood, M. (1926). *A Report on the Natural Duration of Cancer*. Reports on
-  Public Health and Medical Subjects. London: Her Majesty's Stationery Office.
-  33, 1-26.
+* Nelson, W. (1969). *Hazard plotting for incomplete failure data*.
+  Journal of Quality Technology 1, 27–52.

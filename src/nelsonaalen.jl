@@ -28,3 +28,16 @@ stderr_start(::Type{NelsonAalen}) = 0.0 # StdErr starting point
 
 estimator_update(::Type{NelsonAalen}, es, dᵢ, nᵢ) = es + dᵢ / nᵢ # Estimator update rule
 stderr_update(::Type{NelsonAalen}, gw, dᵢ, nᵢ) = gw + dᵢ * (nᵢ - dᵢ) / (nᵢ^3) # StdErr update rule
+
+"""
+    confint(na::NelsonAalen, α=0.05)
+
+Compute the pointwise confidence intervals for the cumulative hazard
+function as a vector of tuples.
+"""
+function StatsBase.confint(na::NelsonAalen, α::Float64=0.05)
+    q = quantile(Normal(), 1 - α/2)
+    return map(na.chaz, na.stderr) do srv, se
+        srv - q * se, srv + q * se
+    end
+end
