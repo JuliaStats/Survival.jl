@@ -11,7 +11,12 @@ where ``\lambda(t|X_i)`` is the estimated hazard for sample ``i``, ``\lambda_0``
 ## API
 
 ```@docs
+CoxModel
 StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
+coxph
+baseline_hazard
+baseline_cumulative_hazard
+baseline_survival
 ```
 
 ## References
