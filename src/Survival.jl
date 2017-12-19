@@ -25,7 +25,10 @@ export
     nobs,
     dof,
     vcov,
-    stderr
+    stderr,
+    baseline_hazard,
+    baseline_cumulative_hazard,
+    baseline_survival
 
 
 abstract type AbstractEstimator end

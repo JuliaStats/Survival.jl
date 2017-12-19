@@ -84,6 +84,10 @@ end
 
 struct CoxModel{T <: Real} <: RegressionModel
     aux::CoxAux{T}
+    times::Array{T, 1}
+    haz::Array{Float64, 1}
+    chaz::Array{Float64, 1}
+    survival::Array{Float64, 1}
     β::Array{T,1}
     loglik::T
     score::Array{T,1}
@@ -116,6 +120,18 @@ StatsBase.dof(obj::CoxModel) = length(obj.β)
 StatsBase.vcov(obj::CoxModel) = obj.vcov
 
 StatsBase.stderr(obj::CoxModel) = sqrt.(diag(vcov(obj)))
+
+# get baseline stats
+
+baseline_hazard(c::CoxModel) = c.haz
+baseline_cumulative_hazard(c::CoxModel) = c.chaz
+baseline_survival(c::CoxModel) = c.survival
+
+# delegate from DataFrameRegressionModel.
+for op in [:baseline_hazard, :baseline_cumulative_hazard, :baseline_survival]
+    @eval $op(m::StatsModels.DataFrameRegressionModel{S, T}) where {S<:CoxModel, T} =
+        $op(m.model)
+end
 
 #compute negative loglikelihood
 
@@ -187,7 +203,12 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost = zero(T), kwarg
     fgh! = (β, grad, hes, compute_derivatives) ->
         _cox_fgh!(β, grad, hes, c, compute_derivatives)
     β, neg_ll, grad, hes = newton_raphson(fgh!, zeros(T, size(X,2)); kwargs...)
-    CoxModel(c, β, -neg_ll, -grad, hes, pinv(hes))
+    times = T[s[i].time for i in c.fs]
+    haz = fill(0.0, length(times))
+    @. haz = (c.ls - c.fs + 1) / c.θ.tails
+    chaz = cumsum(haz)
+    survival = @. exp(-chaz)
+    CoxModel(c, times, haz, chaz, survival, β, -neg_ll, -grad, hes, pinv(hes))
 end
 
 StatsModels.drop_intercept(::Type{CoxModel}) = true
