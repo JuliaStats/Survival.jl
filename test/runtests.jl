@@ -188,6 +188,16 @@ end
     rossi[:event] = EventTime.(rossi[:week],rossi[:arrest] .== 1)
 
     outcome = coxph(@formula(event ~ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
+
+    times, hazard = baseline_hazard(outcome)
+    na = fit(NelsonAalen, rossi[:event])
+    @test times == na.times[na.nevents .> 0]
+    @test hazard ≈ na.nevents[na.nevents .> 0]./outcome.model.aux.θ.tails atol = 1e-8
+    times, cumulative_hazard = baseline_cumulative_hazard(outcome)
+    @test cumulative_hazard ≈ cumsum(hazard) atol = 1e-8
+    times, survival = baseline_survival(outcome)
+    @test survival ≈ exp.(-cumulative_hazard) atol = 1e-8
+
     outcome_coefmat = coeftable(outcome)
 
     coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi)).m

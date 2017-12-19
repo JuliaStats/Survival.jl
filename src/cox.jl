@@ -145,25 +145,28 @@ StatsBase.stderr(obj::CoxModel) = sqrt.(diag(vcov(obj)))
     baseline_hazard(c::CoxModel)
 
 Compute the baseline hazard (when all regressors equal zero) of a fitted `CoxModel` 
-using the Nelson-Aalen estimator.
+using the Nelson-Aalen estimator. Return times at which at least an envent happened 
+and the value of the baseline hazard at those times.
 """
-baseline_hazard(c::CoxModel) = c.haz
+baseline_hazard(c::CoxModel) = c.times, c.haz
 
 """
     baseline_cumulative_hazard(c::CoxModel)
 
 Compute the baseline cumulative hazard (when all regressors equal zero) of a fitted 
-`CoxModel` using the Nelson-Aalen estimator.
+`CoxModel` using the Nelson-Aalen estimator. Return times at which at least an envent 
+happened and the value of the baseline cumulative hazard at those times.
 """
-baseline_cumulative_hazard(c::CoxModel) = c.chaz
+baseline_cumulative_hazard(c::CoxModel) = c.times, c.chaz
 
 """
     baseline_cumulative_hazard(c::CoxModel)
 
 Compute the baseline survival function (when all regressors equal zero) of a fitted 
-`CoxModel` by exponentiating the negative cumulative hazard.
+`CoxModel` by exponentiating the negative cumulative hazard. Return times at which at 
+least an envent happened and the value of the baseline survival function at those times.
 """
-baseline_survival(c::CoxModel) = c.survival
+baseline_survival(c::CoxModel) = c.times, c.survival
 
 # delegate from DataFrameRegressionModel.
 for op in [:baseline_hazard, :baseline_cumulative_hazard, :baseline_survival]
