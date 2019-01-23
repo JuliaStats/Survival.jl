@@ -1,10 +1,10 @@
-__precompile__()
-
 module Survival
 
-using StatsBase, StatsModels
 using Distributions
+using LinearAlgebra
 using PositiveFactorizations
+using StatsBase
+using StatsModels
 
 export
     EventTime,
@@ -25,7 +25,7 @@ export
     nobs,
     dof,
     vcov,
-    stderr
+    stderror
 
 
 abstract type AbstractEstimator end

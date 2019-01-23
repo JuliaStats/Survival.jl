@@ -1,8 +1,11 @@
 using Survival
-using Compat
-using Compat.Test
+using Test
+using CSV
+using DataFrames
 using Distributions
-using DataFrames, StatsModels, StatsBase, CSV
+using LinearAlgebra
+using StatsBase
+using StatsModels
 
 @testset "Event times" begin
     @test isevent(EventTime{Int}(44, true))
@@ -161,42 +164,41 @@ end
         0, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0,
         0, 0, 0, 0, 0, 0,
     ]
-    
+
     na = fit(NelsonAalen, t, s)
     km = fit(KaplanMeier, t, s)
-    
+
     @test na.times == km.times
     @test na.nevents == km.nevents
     @test na.ncensor == km.ncensor
     @test na.natrisk == km.natrisk
-    @test exp.(-na.chaz[1:50]) ≈ km.survival[1:50] rtol = 1e-2
-    @test na.stderr[1:50] ≈ km.stderr[1:50] rtol = 2e-2
+    @test exp.(-na.chaz[1:50]) ≈ km.survival[1:50] rtol=1e-2
+    @test na.stderr[1:50] ≈ km.stderr[1:50] rtol=2e-2
     na_conf = confint(na)
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
-    @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.025, length(na.chaz)) rtol = 1e-8
-    @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.975, length(na.chaz)) rtol = 1e-8
+    @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.025, length(na.chaz)) rtol=1e-8
+    @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.975, length(na.chaz)) rtol=1e-8
     na_conf = confint(na, 0.01)
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
-    @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.005, length(na.chaz)) rtol = 1e-8
-    @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.995, length(na.chaz)) rtol = 1e-8
+    @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.005, length(na.chaz)) rtol=1e-8
+    @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.995, length(na.chaz)) rtol=1e-8
 end
 
 
 @testset "Cox" begin
-    filepath = joinpath(@__DIR__, "data", "rossi.csv")
-    rossi = CSV.read(filepath)
-    rossi[:event] = EventTime.(rossi[:week],rossi[:arrest] .== 1)
+    rossi = CSV.read(joinpath(@__DIR__, "data", "rossi.csv"))
+    rossi[:event] = EventTime.(rossi[:week], rossi[:arrest] .== 1)
 
-    outcome = coxph(@formula(event ~ fin+age+race+wexp+mar+paro+prio), rossi; tol = 1e-8)
+    outcome = coxph(@formula(event ~ fin + age + race + wexp + mar + paro + prio), rossi; tol=1e-8)
     outcome_coefmat = coeftable(outcome)
 
-    regressor_matrix = Array(rossi[[:fin, :age, :race, :wexp, :mar, :paro, :prio]])
+    regressor_matrix = Matrix(rossi[[:fin, :age, :race, :wexp, :mar, :paro, :prio]])
     event_vector = rossi[:event]
 
     outcome_without_formula = coxph(regressor_matrix, event_vector)
 
     @test sprint(show, outcome_without_formula) == """
-        Survival.CoxModel{Float64}
+        CoxModel{Float64}
 
         Coefficients:
                Estimate Std.Error   z value Pr(>|z|)
@@ -209,10 +211,10 @@ end
         x7     0.091521 0.0286469    3.1948   0.0014
         """
 
-    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0+fin+age+race+wexp+mar+paro+prio), rossi)).m
-    outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol = 1e-8, l2_cost = 0)
-    outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi[:event]; tol = 1e-5)
-    outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi[:event]; tol = 1e-6, l2_cost = 0.0)
+    coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0 + fin + age + race + wexp + mar + paro + prio), rossi)).m
+    outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol=1e-8, l2_cost=0)
+    outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi[:event]; tol=1e-5)
+    outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi[:event]; tol=1e-6, l2_cost=0.0)
 
     expected_coefs = [
         -0.379422   0.191379   -1.98256   0.0474;
@@ -224,32 +226,32 @@ end
          0.0914971  0.0286485   3.19378   0.0014
     ]
 
-    @test coef(outcome_from_matrix) ≈ coef(outcome) atol = 1e-5
-    @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix32) atol = 1e-4
-    @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix_int) atol = 1e-5
+    @test coef(outcome_from_matrix) ≈ coef(outcome) atol=1e-5
+    @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix32) atol=1e-4
+    @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix_int) atol=1e-5
     @test nobs(outcome) == size(rossi, 1)
     @test dof(outcome) == 7
     @test loglikelihood(outcome) > nullloglikelihood(outcome)
-    @test all(eig(outcome.model.fischer_info)[1] .> 0)
-    @test outcome.model.fischer_info * vcov(outcome) ≈ eye(7) atol = 1e-10
+    @test all(x->x > 0, eigen(outcome.model.fischer_info).values)
+    @test outcome.model.fischer_info * vcov(outcome) ≈ I atol=1e-10
     @test norm(outcome.model.score) < 1e-5
-    @test hcat(outcome_coefmat.cols[1:3]...) ≈ expected_coefs[:, 1:3] atol = 1e-5
+    @test hcat(outcome_coefmat.cols[1:3]...) ≈ expected_coefs[:,1:3] atol=1e-5
 
-    outcome_fin = coxph(@formula(event ~ fin), rossi; tol = 1e-8)
+    outcome_fin = coxph(@formula(event ~ fin), rossi; tol=1e-8)
     @test coeftable(outcome_fin).rownms == ["fin"]
-    outcome_finrace = coxph(@formula(event ~ fin*race), rossi; tol = 1e-8)
+    outcome_finrace = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_finrace).rownms == ["fin", "race","fin & race"]
     categorical!(rossi, :fin)
-    outcome_fincat = coxph(@formula(event ~ fin), rossi; tol = 1e-8)
-    @test coeftable(outcome_fincat).rownms == ["fin: 1"]    
-    @test coef(outcome_fin) ≈ coef(outcome_fincat) atol = 1e-8
-    outcome_fincatrace = coxph(@formula(event ~ fin*race), rossi; tol = 1e-8)
+    outcome_fincat = coxph(@formula(event ~ fin), rossi; tol=1e-8)
+    @test coeftable(outcome_fincat).rownms == ["fin: 1"]
+    @test coef(outcome_fin) ≈ coef(outcome_fincat) atol=1e-8
+    outcome_fincatrace = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_fincatrace).rownms == ["fin: 1", "race","fin: 1 & race"]
-    @test coef(outcome_fincatrace) ≈ coef(outcome_finrace) atol = 1e-8
+    @test coef(outcome_fincatrace) ≈ coef(outcome_finrace) atol=1e-8
     categorical!(rossi, :race)
-    outcome_fincatracecat = coxph(@formula(event ~ fin*race), rossi; tol = 1e-8)
+    outcome_fincatracecat = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
-    @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol = 1e-8
+    @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol=1e-8
 end
 
 @testset "Newton-Raphson" begin
@@ -260,12 +262,12 @@ end
         end
         (exp(x[1]) - 1)^2
     end
-    x, y, grad, hes = Survival.newton_raphson(fgh!, [2.2], tol = 1e-5)
-    @test x ≈ [0] atol = 1e-5
-    @test y ≈ 0 atol = 1e-5
-    @test grad ≈ [0] atol = 1e-5
-    @test hes ≈ [2] atol = 1e-5
-    @test_throws ConvergenceException Survival.newton_raphson(fgh!, [2.2], max_iter = 2)
+    x, y, grad, hes = Survival.newton_raphson(fgh!, [2.2], tol=1e-5)
+    @test x ≈ [0] atol=1e-5
+    @test y ≈ 0 atol=1e-5
+    @test grad ≈ [0] atol=1e-5
+    @test hes ≈ [2] atol=1e-5
+    @test_throws ConvergenceException Survival.newton_raphson(fgh!, [2.2], max_iter=2)
 
     function wrong_fgh!(x, grad, hes, compute_ders)
         if compute_ders
@@ -275,5 +277,4 @@ end
         (exp(x[1]) - 1)^2
     end
     @test_throws ErrorException Survival.newton_raphson(wrong_fgh!, [2.2])
-
 end
