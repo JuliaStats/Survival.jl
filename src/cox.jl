@@ -1,5 +1,8 @@
 # Some utility functions to compute Cox regression
 
+promote_nonmissing(::Type{T}) where {T} = Base.promote_op(/, T, T)
+promote_nonmissing(::Type{Union{T,Missing}}) where {T} = promote_nonmissing(T)
+
 struct CoxSum{T,N}
     values::Array{T,N}
     sums::Array{T,N}
@@ -31,7 +34,7 @@ struct CoxAux{T}
 end
 
 function CoxAux(X::AbstractArray{T}, s::AbstractVector, l2_cost) where T
-    R = Base.nonmissingtype(Base.promote_op(/, T, T))
+    R = promote_nonmissing(T)
     ξ = zeros(R, size(X, 1), size(X, 2), size(X, 2))
     @inbounds for k2 in 1:size(ξ, 3), k1 in 1:k2, i in 1:size(ξ,1)
         ξ[i,k1,k2] = X[i,k1]*X[i,k2]
@@ -174,7 +177,7 @@ end
 _coxph(X::AbstractArray{<:Integer}, s::AbstractVector; kwargs...) = _coxph(float(X), s; kwargs...)
 
 function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost=zero(T), kwargs...) where T
-    R = Base.nonmissingtype(Base.promote_op(/, T, T))
+    R = promote_nonmissing(T)
     c = CoxAux(X, s, l2_cost)
     fgh! = (β, grad, hes, compute_derivatives)->_cox_fgh!(β, grad, hes, c, compute_derivatives)
     β, neg_ll, grad, hes = newton_raphson(fgh!, zeros(R, size(X, 2)); kwargs...)
