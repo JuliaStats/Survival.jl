@@ -29,7 +29,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Contents",
     "category": "section",
-    "text": "Pages = [\n    \"events.md\",\n    \"km.md\",\n    \"cox.md\",\n]\nDepth = 1"
+    "text": "Pages = [\n    \"events.md\",\n    \"km.md\",\n    \"na.md\",\n    \"cox.md\",\n]\nDepth = 1"
 },
 
 {
