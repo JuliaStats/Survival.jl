@@ -2,8 +2,6 @@ using Survival, Documenter
 
 makedocs(
     modules = [Survival],
-    clean = false,
-    format = :html,
     sitename = "Survival.jl",
     authors = "Alex Arslan",
     pages = [
@@ -18,6 +16,4 @@ makedocs(
 deploydocs(
     repo = "github.com/ararslan/Survival.jl.git",
     target = "build",
-    deps = nothing,
-    make = nothing,
 )
