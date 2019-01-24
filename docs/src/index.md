@@ -19,6 +19,7 @@ be installed using `Pkg.add("https://github.com/ararslan/Survival.jl")`.
 Pages = [
     "events.md",
     "km.md",
+    "na.md",
     "cox.md",
 ]
 Depth = 1

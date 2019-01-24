@@ -6,9 +6,9 @@ A Julia package for performing [survival analysis](https://en.wikipedia.org/wiki
 [![Coveralls](https://coveralls.io/repos/github/ararslan/Survival.jl/badge.svg?branch=master)](https://coveralls.io/github/ararslan/Survival.jl?branch=master)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://ararslan.github.io/Survival.jl/latest)
 
-Planned functionality:
+Functionality:
 
- - [x] Time-to-event types
- - [x] Kaplan-Meier survival
- - [ ] Cox proportional hazards regression
- - [ ] Log-rank test
+* Time-to-event types
+* Kaplan-Meier survival
+* Nelson-Aalen cumulative hazard
+* Cox proportional hazards regression
