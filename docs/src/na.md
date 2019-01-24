@@ -13,8 +13,8 @@ where ``d_i`` is the number of observed events at time ``t_i`` and ``n_i`` is th
 number of subjects at risk for the event just before time ``t_i``.
 
 The pointwise standard error of the log of the survivor function can be computed
-directly as the standard error or a Bernoulli random variable with `d_i` successes
-from `n_i` samples:
+directly as the standard error or a Bernoulli random variable with ``d_i`` successes
+from ``n_i`` samples:
 
 ```math
 \text{SE}(\hat{H}(t)) = \sqrt{\sum_{i: t_i < t} \frac{d_i(n_i-d_i)}{n_i^3}}
@@ -24,10 +24,8 @@ from `n_i` samples:
 
 ```@docs
 Survival.NelsonAalen
-StatsBase.fit(::Type{S},
-              times::AbstractVector{T},
-              status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator, T}
-StatsBase.confint(na::NelsonAalen, α::Float64=0.05)
+StatsBase.fit(::Type{NelsonAalen}, ::Any, ::Any)
+StatsBase.confint(::NelsonAalen, ::Float64)
 ```
 
 ## References

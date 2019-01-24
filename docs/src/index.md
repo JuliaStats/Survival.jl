@@ -1,3 +1,8 @@
+```@meta
+DocTestSetup = :(using Survival, StatsBase)
+CurrentModule = Survival
+```
+
 # Survival.jl
 
 This package provides types and methods for performing
@@ -5,12 +10,8 @@ This package provides types and methods for performing
 
 ## Installation
 
-The package is not yet registered in Julia's package registry, and so it must
-be installed using
-
-```julia
-Pkg.clone("https://github.com/ararslan/Survival.jl.git")
-```
+The package is not yet registered in Julia's General package registry, and so it must
+be installed using `Pkg.add("https://github.com/ararslan/Survival.jl")`.
 
 ## Contents
 

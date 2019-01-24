@@ -24,10 +24,8 @@ using Greenwood's formula:
 
 ```@docs
 Survival.KaplanMeier
-StatsBase.fit(::Type{S},
-              times::AbstractVector{T},
-              status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator, T}
-StatsBase.confint(km::KaplanMeier, α::Float64=0.05)
+StatsBase.fit(::Type{KaplanMeier}, ::Any, ::Any)
+StatsBase.confint(::KaplanMeier, ::Float64)
 ```
 
 ## References

@@ -1,4 +1,4 @@
-using Survival, Documenter
+using Survival, Documenter, StatsBase
 
 makedocs(
     modules = [Survival],

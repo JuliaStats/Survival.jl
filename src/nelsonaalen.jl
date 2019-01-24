@@ -41,3 +41,12 @@ function StatsBase.confint(na::NelsonAalen, α::Float64=0.05)
         srv - q * se, srv + q * se
     end
 end
+
+"""
+    fit(NelsonAalen, times, status) -> NelsonAalen
+
+Given a vector of times to events and a corresponding vector of indicators that
+dictate whether each time is an observed event or is right censored, compute the
+Nelson-Aalen estimate of the cumulative hazard rate function.
+"""
+StatsBase.fit(::Type{NelsonAalen}, times, status)

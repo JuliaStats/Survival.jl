@@ -44,3 +44,12 @@ function StatsBase.confint(km::KaplanMeier, α::Float64=0.05)
         exp(-exp(l - a)), exp(-exp(l + a))
     end
 end
+
+"""
+    fit(KaplanMeier, times, status) -> KaplanMeier
+
+Given a vector of times to events and a corresponding vector of indicators that
+dictate whether each time is an observed event or is right censored, compute the
+Kaplan-Meier estimate of the survivor function.
+"""
+StatsBase.fit(::Type{KaplanMeier}, times, status)

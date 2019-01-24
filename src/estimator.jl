@@ -55,17 +55,9 @@ function _estimator(::Type{S}, tte::AbstractVector{T}, status::BitVector) where 
     return S{T}(times, nevents, ncensor, natrisk, estimator, stderr)
 end
 
-"""
-    fit(::Type{S}, times, status) where S<:NonparametricEstimator
-
-Given a vector of times to events and a corresponding vector of indicators that
-dictate whether each time is an observed event or is right censored, compute the
-model of type `S`. Return an object of type `S`: [`KaplanMeier`](@ref) and 
-[`NelsonAalen`](@ref) are supported so far.
-"""
 function StatsBase.fit(::Type{S},
                        times::AbstractVector{T},
-                       status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator, T}
+                       status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator,T}
     nobs = length(times)
     if length(status) != nobs
         throw(DimensionMismatch("there must be as many event statuses as times"))
