@@ -14,6 +14,6 @@ makedocs(
 )
 
 deploydocs(
-    repo = "github.com/ararslan/Survival.jl.git",
+    repo = "github.com/JuliaStats/Survival.jl.git",
     target = "build",
 )

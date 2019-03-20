@@ -11,7 +11,7 @@ This package provides types and methods for performing
 ## Installation
 
 The package is not yet registered in Julia's General package registry, and so it must
-be installed using `Pkg.add("https://github.com/ararslan/Survival.jl")`.
+be installed using `Pkg.add("https://github.com/JuliaStats/Survival.jl")`.
 
 ## Contents
 
