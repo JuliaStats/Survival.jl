@@ -21,7 +21,7 @@ var documenterSearchIndex = {"docs": [
     "page": "Home",
     "title": "Installation",
     "category": "section",
-    "text": "The package is not yet registered in Julia\'s General package registry, and so it must be installed using Pkg.add(\"https://github.com/ararslan/Survival.jl\")."
+    "text": "The package is not yet registered in Julia\'s General package registry, and so it must be installed using Pkg.add(\"https://github.com/JuliaStats/Survival.jl\")."
 },
 
 {
