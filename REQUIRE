@@ -1,5 +1,0 @@
-julia 0.7
-StatsBase
-Distributions
-PositiveFactorizations
-StatsModels 0.2.1
