@@ -6,8 +6,11 @@ using PositiveFactorizations
 using StatsBase
 using StatsModels
 
+import StatsModels: AbstractTerm, concrete_term, modelcols
+
 export
     EventTime,
+    EventTimeTerm,
     isevent,
     iscensored,
 

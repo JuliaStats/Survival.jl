@@ -39,3 +39,16 @@ end
 
 isevent(ev::EventTime) = ev.status
 iscensored(ev::EventTime) = !ev.status
+
+
+# Concrete term to play along StatsModels
+
+struct EventTimeTerm <: AbstractTerm
+    sym::Symbol
+end
+
+function concrete_term(t::Term, xs::AbstractVector{<:EventTime}, ::Nothing)
+    EventTimeTerm(t.sym)
+end
+
+modelcols(t::EventTimeTerm, d::NamedTuple) = d[t.sym]
