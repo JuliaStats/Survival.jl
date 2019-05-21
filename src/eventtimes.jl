@@ -39,3 +39,9 @@ end
 
 isevent(ev::EventTime) = ev.status
 iscensored(ev::EventTime) = !ev.status
+
+## StatsModels compatibility
+
+StatsModels.concrete_term(t::Term, xs::AbstractVector{<:EventTime}, ::Nothing) =
+    StatsModels.ContinuousTerm(t.sym, first(xs), first(xs), first(xs), first(xs))
+Base.copy(et::EventTime) = et
