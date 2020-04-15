@@ -187,13 +187,13 @@ end
 
 @testset "Cox" begin
     rossi = CSV.read(joinpath(@__DIR__, "data", "rossi.csv"))
-    rossi[:event] = EventTime.(rossi[:week], rossi[:arrest] .== 1)
+    rossi.event = EventTime.(rossi.week, rossi.arrest .== 1)
 
     outcome = coxph(@formula(event ~ fin + age + race + wexp + mar + paro + prio), rossi; tol=1e-8)
     outcome_coefmat = coeftable(outcome)
 
-    regressor_matrix = Matrix(rossi[[:fin, :age, :race, :wexp, :mar, :paro, :prio]])
-    event_vector = rossi[:event]
+    regressor_matrix = Matrix(rossi[!, [:fin, :age, :race, :wexp, :mar, :paro, :prio]])
+    event_vector = rossi.event
 
     outcome_without_formula = coxph(regressor_matrix, event_vector)
 
@@ -215,9 +215,9 @@ end
         """)
 
     coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0 + fin + age + race + wexp + mar + paro + prio), rossi)).m
-    outcome_from_matrix     = coxph(coef_matrix, rossi[:event]; tol=1e-8, l2_cost=0)
-    outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi[:event]; tol=1e-5)
-    outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi[:event]; tol=1e-6, l2_cost=0.0)
+    outcome_from_matrix     = coxph(coef_matrix, rossi.event; tol=1e-8, l2_cost=0)
+    outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi.event; tol=1e-5)
+    outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi.event; tol=1e-6, l2_cost=0.0)
 
     expected_coefs = [
         -0.379422   0.191379   -1.98256   0.0474;
