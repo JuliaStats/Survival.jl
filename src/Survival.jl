@@ -5,6 +5,7 @@ using LinearAlgebra
 using PositiveFactorizations
 using StatsBase
 using StatsModels
+using Tables
 
 export
     EventTime,
@@ -37,5 +38,6 @@ include("kaplanmeier.jl")
 include("nelsonaalen.jl")
 include("cox.jl")
 include("optimization.jl")
+include("tables.jl")
 
 end # module
