@@ -25,7 +25,16 @@ export
     nobs,
     dof,
     vcov,
-    stderror
+    stderror,
+
+    CumulativeIncidence,
+    CompetingEventTime,
+    eventtime,
+    eventstatus,
+    iseventofinterest,
+    iscompetitingevent,
+    swapeventofinterest,
+    swapcensoringevent
 
 
 abstract type AbstractEstimator end
@@ -37,5 +46,6 @@ include("kaplanmeier.jl")
 include("nelsonaalen.jl")
 include("cox.jl")
 include("optimization.jl")
+include("cuminc.jl")
 
 end # module
