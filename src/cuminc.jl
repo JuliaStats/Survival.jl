@@ -65,9 +65,10 @@ stderr_start(::Type{CumulativeIncidence}) = 0.0
 
 # Delta method variance formula (as opposed to Aalen counting process method)
 function stderr_update(::Type{CumulativeIncidence}, es, dᵢ, dₐ, nₐ, surv, gw, vartmp1, vartmp2)
-    nextvartmp1 = vartmp1 + es * dₐ / (nₐ * (nₐ - dₐ)) + surv * dᵢ / nₐ^2
-    nextvartmp2 = vartmp2 + es^2 * dₐ / (nₐ * (nₐ - dₐ)) + surv^2 * (nₐ - dᵢ) * dᵢ / nₐ^3 + 2 * es * surv * dᵢ / nₐ^2
-    vares = es^2 * gw - 2 * es * nextvartmp1 + nextvartmp2 
+    naf = float(nₐ)
+    nextvartmp1 = vartmp1 + es * dₐ / (naf * (naf - dₐ)) + surv * dᵢ / naf^2
+    nextvartmp2 = vartmp2 + es^2 * dₐ / (naf * (naf - dₐ)) + surv^2 * (naf - dᵢ) * dᵢ / naf^3 + 2 * es * surv * dᵢ / naf^2
+    vares = es^2 * gw - 2 * es * nextvartmp1 + nextvartmp2
     return (vares,nextvartmp1,nextvartmp2)
 end
 
