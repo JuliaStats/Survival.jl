@@ -16,3 +16,22 @@ A dedicated type is provided to conveniently store right censored data.
 ```@docs
 Survival.EventTime
 ```
+
+
+If your data contain competing risks, you should use a `CompetingEventTime`. This type allows you to specify which type of event occurred and what your event of interest is.
+
+```@docs
+Survival.CompetingEventTime
+```
+
+## API
+
+```@docs
+Survival.iscensored
+Survival.isevent
+Survival.iseventofinterest
+Survival.eventtype
+Survival.iscompetingevent(::CompetingEventTime)
+Survival.swapeventofinterest(::CompetingEventTime)
+Survival.swapcensoringevent(::CompetingEventTime)
+```

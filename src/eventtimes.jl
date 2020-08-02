@@ -1,6 +1,11 @@
 #-- EventTime ---------------
 
+
+
+
+
 ## Type constructors
+
 
 """
     EventTime{T}
@@ -8,7 +13,7 @@
 Immutable object containing the real-valued time to an event as well as an indicator of
 whether the time corresponds to an observed event (`true`) or right censoring (`false`).
 """
-struct EventTime{T<:Real}
+struct EventTime{T<:Real} <: AbstractEventTime
     time::T
     status::Bool
 end
@@ -98,12 +103,10 @@ CompetingEventTime(time::T,status::S=1; eventofinterest::S=one(S), censoringeven
 
 
 ## New functions
-eventtime(ev::CompetingEventTime) = ev.time
-eventstatus(ev::CompetingEventTime) = ev.status
 iscensored(ev::CompetingEventTime) = ev.status == ev.censoringevent
 iseventofinterest(ev::CompetingEventTime) = ev.status == ev.eventofinterest
 isevent(ev::CompetingEventTime) = !iscensored(ev)
-iscompetitingevent(ev::CompetingEventTime) = !iscensored(ev) && !iseventofinterest(ev)
+iscompetingevent(ev::CompetingEventTime) = !iscensored(ev) && !iseventofinterest(ev)
 
 eventtype(::CompetingEventTime{T,S}) where {T,S} = S
 
@@ -113,7 +116,7 @@ Base.eltype(::CompetingEventTime{T,S}) where {T,S} = T
 function Base.show(io::IO, ev::CompetingEventTime{T,S}) where {T,S} 
     # print(io, "CompetingEventTime{",T,",",S,"}(",ev.time, ifelse(iseventofinterest(ev), "", "+"),ifelse(iscensored(ev),"",string(" (",ev.status,")")),")")
     printstring = string(ev.time, ifelse(iseventofinterest(ev), "", "+"))
-    if iscompetitingevent(ev)
+    if iscompetingevent(ev)
         printstring = string(printstring," (",ev.status,")")
     end
     print(io, printstring)

@@ -36,7 +36,7 @@ export
     swapeventofinterest,
     swapcensoringevent
 
-
+abstract type AbstractEventTime end
 abstract type AbstractEstimator end
 abstract type NonparametricEstimator <: AbstractEstimator end
 

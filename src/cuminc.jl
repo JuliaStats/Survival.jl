@@ -1,12 +1,7 @@
 """
-    fit(CumulativeIncidence, CompetingEventTimes)
-    fit(CumulativeIncidence, times, status, eventofinterest, censoringevent)
+    CumulativeIncidence
 
-Given a vector of times to events, a vector of indicators for the event of interest,
-and a vector of indicators for the competing event, compute the an estimate of the
-cumulative incidence of failure.
-
-The resulting `CumulativeIncidence` object has the following fields:
+A `CumulativeIncidence` object has the following fields:
 
 * `times`: Distinct event times
 * `neventsofinterest`: Number of observed events of interest at each time
@@ -32,14 +27,9 @@ The estimator of the cumulative incidence for event ``k`` is given by
 ``
 where ``d_{k,i}`` are the events of interest ``k`` at time ``t_i``,
 ``n_i`` are the individuals at risk at that time,
-and ``\\hat{S}(t_{i-1})`` is the usual Kaplan-Meier estimate of survival.
+and ``\\hat{S}(t_{i-1})`` is the usual Kaplan-Meier estimate of survival. Standard errors are computed using the Delta method.
 
-Standard errors are computed using the Delta method.
-
-### References
-
-* Kalbfleisch, J. D., and Prentice, R. L. (1980). *The Statistical Analysis of
-  Failure Time Data*. New York, NY: John Wiley.
+See `StatsBase.fit` for estimation.
 """
 struct CumulativeIncidence{T<:Real} <: NonparametricEstimator
     times::Vector{T}
@@ -153,7 +143,14 @@ function _estimator(::Type{CumulativeIncidence}, tte::AbstractVector{CompetingEv
     return CumulativeIncidence{T}(times, neventsofinterest, nallevents, ncensor, natrisk, estimator, stderr, survival, survivalstderr)
 end
 
+"""
+    fit(CumulativeIncidence, tte::AbstractVector{CompetingEventTime})
 
+    fit(CumulativeIncidence, times, status, eventofinterest, censoringevent)
+
+Compute the cumulative incidence function in the presence of multiple types of failure. The data can be supplied as a vector of `CompetingEventTime`s
+or with `times::Vector{<:Real}`, `status::Vector{S}`, `eventofinterest::S`, `censoringevent::S` as separate inputs.
+"""
 function StatsBase.fit(::Type{CumulativeIncidence},tte::AbstractVector{CompetingEventTime{T,S}}) where {T<:Real,S}
     nobs = length(tte)
     if nobs == 0
@@ -168,7 +165,6 @@ end
 
 
 
-# helper function for people too lazy to create CompetingEventTime objects
 function StatsBase.fit(::Type{CumulativeIncidence},
                        times::AbstractVector{T},
                        status::AbstractVector{S},
