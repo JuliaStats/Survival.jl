@@ -10,8 +10,8 @@ This package provides types and methods for performing
 
 ## Installation
 
-The package is not yet registered in Julia's General package registry, and so it must
-be installed using `Pkg.add(PackageSpec(url="https://github.com/JuliaStats/Survival.jl"))`.
+The package is registered in Julia's General package registry, and so it can 
+be installed using `Pkg.add("Survival"))` or via the Pkg REPL mode with `]add Survival`.
 
 ## Contents
 
