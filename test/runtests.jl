@@ -186,7 +186,7 @@ end
 
 
 @testset "Cox" begin
-    rossi = CSV.read(joinpath(@__DIR__, "data", "rossi.csv"))
+    rossi = CSV.read(joinpath(@__DIR__, "data", "rossi.csv"), DataFrame)
     rossi.event = EventTime.(rossi.week, rossi.arrest .== 1)
 
     outcome = coxph(@formula(event ~ fin + age + race + wexp + mar + paro + prio), rossi; tol=1e-8)
@@ -244,14 +244,14 @@ end
     @test coeftable(outcome_fin).rownms == ["fin"]
     outcome_finrace = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_finrace).rownms == ["fin", "race","fin & race"]
-    categorical!(rossi, :fin)
+    transform!(rossi, :fin => categorical, renamecols = false)
     outcome_fincat = coxph(@formula(event ~ fin), rossi; tol=1e-8)
     @test coeftable(outcome_fincat).rownms == ["fin: 1"]
     @test coef(outcome_fin) ≈ coef(outcome_fincat) atol=1e-8
     outcome_fincatrace = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_fincatrace).rownms == ["fin: 1", "race","fin: 1 & race"]
     @test coef(outcome_fincatrace) ≈ coef(outcome_finrace) atol=1e-8
-    categorical!(rossi, :race)
+    transform!(rossi, :race => categorical, renamecols = false)
     outcome_fincatracecat = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
     @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol=1e-8
