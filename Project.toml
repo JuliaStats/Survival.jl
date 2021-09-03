@@ -12,7 +12,7 @@ StatsModels = "3eaba693-59b7-5ba5-a881-562e759f1c8d"
 [compat]
 CategoricalArrays = "0.9"
 DataFrames = "1"
-Distributions = "0.20, 0.21, 0.22, 0.23, 0.24"
+Distributions = "0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
 PositiveFactorizations = "0.2"
 StatsBase = "0.30, 0.31, 0.32, 0.33"
 StatsModels = "0.6"
