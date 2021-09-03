@@ -2,6 +2,7 @@ using Survival
 using Test
 using CSV
 using DataFrames
+using CategoricalArrays
 using Distributions
 using LinearAlgebra
 using StatsBase
