@@ -2,7 +2,7 @@
 
 A Julia package for performing [survival analysis](https://en.wikipedia.org/wiki/Survival_analysis).
 
-[![Travis](https://travis-ci.org/JuliaStats/Survival.jl.svg?branch=master)](https://travis-ci.org/JuliaStats/Survival.jl)
+[![CI](https://github.com/JuliaStats/Survival.jl/actions/workflows/CI.yml/badge.svg)](https://github.com/JuliaStats/Survival.jl/actions/workflows/CI.yml)
 [![Coveralls](https://coveralls.io/repos/github/JuliaStats/Survival.jl/badge.svg?branch=master)](https://coveralls.io/github/JuliaStats/Survival.jl?branch=master)
 [![](https://img.shields.io/badge/docs-latest-blue.svg)](https://JuliaStats.github.io/Survival.jl/latest)
 
