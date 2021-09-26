@@ -21,6 +21,7 @@ Pages = [
     "km.md",
     "na.md",
     "cox.md",
+    "cif.md"
 ]
 Depth = 1
 ```
