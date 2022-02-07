@@ -198,22 +198,21 @@ end
 
     outcome_without_formula = coxph(regressor_matrix, event_vector)
 
-    @test sprint(show, outcome_without_formula) == chomp("""
-        CoxModel{Float64}
+    @test sprint(show, outcome_without_formula) == """
+CoxModel{Float64}
 
-        Coefficients:
-        ──────────────────────────────────────────────
-              Estimate  Std.Error    z value  Pr(>|z|)
-        ──────────────────────────────────────────────
-        x1  -0.379416   0.191379   -1.98253     0.0474
-        x2  -0.0574299  0.0219988  -2.61059     0.0090
-        x3   0.31392    0.307995    1.01924     0.3081
-        x4  -0.14981    0.212226   -0.705898    0.4803
-        x5  -0.433724   0.38187    -1.13579     0.2560
-        x6  -0.0848615  0.195756   -0.433505    0.6646
-        x7   0.091521   0.0286469   3.1948      0.0014
-        ──────────────────────────────────────────────
-        """)
+Coefficients:
+──────────────────────────────────────────────
+      Estimate  Std.Error    z value  Pr(>|z|)
+──────────────────────────────────────────────
+x1  -0.379422   0.191379   -1.98256     0.0474
+x2  -0.0574377  0.0219995  -2.61087     0.0090
+x3   0.3139     0.307993    1.01918     0.3081
+x4  -0.149796   0.212224   -0.705837    0.4803
+x5  -0.433704   0.381868   -1.13574     0.2561
+x6  -0.0848711  0.195757   -0.433554    0.6646
+x7   0.0914971  0.0286485   3.19378     0.0014
+──────────────────────────────────────────────"""
 
     coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0 + fin + age + race + wexp + mar + paro + prio), rossi)).m
     outcome_from_matrix     = coxph(coef_matrix, rossi.event; tol=1e-8, l2_cost=0)
@@ -256,29 +255,4 @@ end
     outcome_fincatracecat = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
     @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol=1e-8
-end
-
-@testset "Newton-Raphson" begin
-    function fgh!(x, grad, hes, compute_ders)
-        if compute_ders
-            grad[1] = 2exp(x[1])*(exp(x[1]) - 1)
-            hes[1,1] = 2exp(x[1])*(2exp(x[1]) - 1)
-        end
-        (exp(x[1]) - 1)^2
-    end
-    x, y, grad, hes = Survival.newton_raphson(fgh!, [2.2], tol=1e-5)
-    @test x ≈ [0] atol=1e-5
-    @test y ≈ 0 atol=1e-5
-    @test grad ≈ [0] atol=1e-5
-    @test hes ≈ [2] atol=1e-5
-    @test_throws ConvergenceException Survival.newton_raphson(fgh!, [2.2], max_iter=2)
-
-    function wrong_fgh!(x, grad, hes, compute_ders)
-        if compute_ders
-            grad[1] = -2exp(x[1])*(exp(x[1]) - 1) # wrong sign
-            hes[1,1] = 2exp(x[1])*(2exp(x[1]) - 1)
-        end
-        (exp(x[1]) - 1)^2
-    end
-    @test_throws ErrorException Survival.newton_raphson(wrong_fgh!, [2.2])
 end

@@ -123,65 +123,83 @@ StatsBase.stderror(obj::CoxModel) = sqrt.(diag(vcov(obj)))
 function _cox_f(β, c::CoxAux{T})::T where T
     grad = zeros(T, length(β))
     hes = zeros(T, length(β), length(β))
-    _cox_fgh!(β, grad, hes, c, false)
+    _cox_fgh!(β, nothing, nothing, c)
 end
 
 #compute negative loglikelihood, gradient and hessian
 
-function _cox_fgh!(β, grad, hes, c::CoxAux{T}, compute_derivatives) where T
-    update_cox!(c, β, compute_derivatives)
+function _cox_fgh!(β, grad, hes, c::CoxAux{T}) where T
+    update_cox!(c, β, (hes !== nothing) | (grad !== nothing))
     X, ξ, Xβ, θ, Xθ, ξθ, λ, fs, ls  =
         c.X, c.ξ, c.Xβ, c.θ, c.Xθ, c.ξθ, c.λ, c.fs, c.ls
     R = Base.promote_op(/, T, T)
     y = zero(R)
-    if compute_derivatives
-        grad .= zero(R)
-        hes .= zero(R)
+
+    if hes !== nothing
+        fill!(hes, 0)
+    end
+    if grad !== nothing
+        fill!(grad, 0)
+    end
+    if grad !== nothing || hes !== nothing
         # preallocate
         Z = zeros(R, length(β))
     end
+
     @inbounds for i in 1:length(fs)
         for j in fs[i]:ls[i]
             ρ = (j - fs[i]) / (ls[i] + 1 - fs[i])
             ϕ = θ.tails[i] - ρ * θ.chunks[i]
             y -= Xβ[j] - log(ϕ)
-            if compute_derivatives
+            if hes !== nothing || grad !== nothing
                 for k in eachindex(Z)
                     Z[k] = Xθ.tails[i,k] - ρ * Xθ.chunks[i,k]
                 end
                 for k2 in 1:length(β)
-                    grad[k2] += Z[k2] / ϕ - X[j,k2]
-                    for k1 in 1:k2
-                        Ξ = ξθ.tails[i,k1,k2] - ρ * ξθ.chunks[i,k1,k2]
-                        hes[k1,k2] += Ξ / ϕ - Z[k1] * Z[k2] / ϕ^2
+                    if grad !== nothing
+                        grad[k2] += Z[k2] / ϕ - X[j,k2]
+                    end
+                    if hes !== nothing
+                        for k1 in 1:k2
+                            Ξ = ξθ.tails[i,k1,k2] - ρ * ξθ.chunks[i,k1,k2]
+                            hes[k1,k2] += Ξ / ϕ - Z[k1] * Z[k2] / ϕ^2
+                        end
                     end
                 end
             end
         end
     end
     y += λ*(β'β)
-    if compute_derivatives
+    if hes !== nothing || grad !== nothing
         for k1 in 1:length(β)
-            grad[k1] += 2*λ*β[k1]
-            hes[k1,k1] += 2*λ
+            if grad !== nothing
+                grad[k1] += 2*λ*β[k1]
+            end
+            if hes !== nothing
+                hes[k1,k1] += 2*λ
+            end
         end
-        for k2 in 1:length(β)
-            for k1 in k2+1:length(β)
-                hes[k1,k2] = hes[k2,k1]
+        if hes !== nothing
+            for k2 in 1:length(β)
+                for k1 in k2+1:length(β)
+                    hes[k1,k2] = hes[k2,k1]
+                end
             end
         end
     end
     return y
 end
 
-_coxph(X::AbstractArray{<:Integer}, s::AbstractVector; kwargs...) = _coxph(float(X), s; kwargs...)
+_coxph(X::AbstractArray{<:Integer}, s::AbstractVector; tol, l2_cost) = _coxph(float(X), s; tol=tol, l2_cost=l2_cost)
 
-function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost=zero(T), kwargs...) where T
+function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
     R = promote_nonmissing(T)
     c = CoxAux(X, s, l2_cost)
-    fgh! = (β, grad, hes, compute_derivatives)->_cox_fgh!(β, grad, hes, c, compute_derivatives)
-    β, neg_ll, grad, hes = newton_raphson(fgh!, zeros(R, size(X, 2)); kwargs...)
-    CoxModel{R}(c, β, -neg_ll, -grad, hes, pinv(hes))
+    β₀ = zeros(R, size(X, 2))
+    fgh! = TwiceDifferentiable(Optim.only_fgh!((f, G, H, x)->_cox_fgh!(x, G, H, c)), β₀)
+    res = optimize(fgh!, β₀, NewtonTrustRegion(), Optim.Options(g_tol = tol))
+    β, neg_ll, grad, hes = Optim.minimizer(res), Optim.minimum(res), Optim.gradient(fgh!), Optim.hessian(fgh!)
+    return CoxModel{R}(c, β, -neg_ll, -grad, hes, pinv(hes))
 end
 
 StatsModels.drop_intercept(::Type{CoxModel}) = true
@@ -193,11 +211,11 @@ Given a matrix `M` of predictors and a corresponding vector of events, compute t
 Cox proportional hazard model estimate of coefficients. Returns a `CoxModel`
 object.
 """
-function StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
+function StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; tol=1e-4, l2_cost=0)
     index_perm = sortperm(y)
     X = M[index_perm,:]
     s = y[index_perm]
-    _coxph(X, s; kwargs...)
+    _coxph(X, s; tol=tol, l2_cost=l2_cost)
 end
 
 coxph(M, y; kwargs...) = fit(CoxModel, M, y; kwargs...)
