@@ -29,7 +29,7 @@
     @test isapprox(kt.stat, 1.507214, atol=1e-5, rtol=1e-5)
     @test isapprox(kt.dof, 2)
     @test isapprox(kt.expected, [1.25, 2.41666667, 4.33333], atol=1e-5, rtol=1e-5)
-    @test isapprox(kt.var, [0.7329545 -0.3227814 -0.4101732; 
+    @test isapprox(kt.var, [0.7329545 -0.3227814 -0.4101732;
                             -0.3227814 1.2704726 -0.9476912;
                             -0.4101732 -0.9476912 1.3578644], atol=1e-5, rtol=1e-5)
 
@@ -87,4 +87,20 @@
     kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:FH, fh=[0.6, 0.2])
     @test isapprox(kt.stat, 0.63748839, atol=1e-5, rtol=1e-5)
     @test isapprox(kt.dof, 1)
+
+	# Trend test
+    # Column 1 is time, column 2 is status, column 3 is group,
+    # column 4 is strata.
+    da = [1 1 1 1; 3 0 1 1; 5 1 1 1; 2 1 2 1; 4 1 2 1; 6 0 2 1
+          8 1 3 1; 5 1 3 1; 2 0 3 2; 1 0 1 2; 3 1 1 2; 4 1 1 2;
+          6 1 2 2; 7 0 2 2; 1 1 2 2; 1 1 3 2; 3 0 3 2; 5 0 3 2]
+	trend = Dict(1=>1, 2=>2, 3=>3)
+    # Trend test without stratification.
+    kt = logrank_test(da[:,1], da[:,2], da[:,3]; trend=trend)
+	@assert isapprox(kt.stat, 1.93, atol=1e-2, rtol=1e-2)
+	@assert isapprox(kt.dof, 1)
+    # Trend test with stratification.
+    kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:, 4]; trend=trend)
+	@assert isapprox(kt.stat, 1.52, atol=1e-2, rtol=1e-2)
+	@assert isapprox(kt.dof, 1)
 end

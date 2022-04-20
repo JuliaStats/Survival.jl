@@ -75,6 +75,23 @@ function update_km!(km::NTuple{N,KaplanMeier{T}}, t::T, natrisk::Vector,
     end
 end
 
+function get_stat(od::Vector, va::Matrix, trend=nothing)
+	p = length(od) - 1
+    stat, dof = if isnothing(trend)
+    	# Standard test
+    	try
+    		od[1:p]' * (va[1:p, 1:p] \ od[1:p]), p
+		catch SingularException
+			@warn("Singular covariance encountered in log rank test, using pseudo-inverse")
+    		od[1:p]' * pinv(va[1:p, 1:p]) * od[1:p], p
+		end
+	else
+		# Trend test
+		dot(trend, od)^2 / (trend' * va * trend), 1
+	end
+	return stat, dof
+end
+
 """
     logrank_test(km) -> NamedTuple
 
@@ -82,7 +99,7 @@ Conduct a logrank test for the null hypothesis that n population
 survival functions are equal.  The parameters here are an arbitrary
 number of fitted survival functions of type 'KaplanMeier'.
 """
-function logrank_test(km::KaplanMeier...; method=:LogRank, psf=nothing, fh=[1., 1.])
+function logrank_test(km::KaplanMeier...; method=:LogRank, psf=nothing, trend=nothing, fh=[1., 1.])
 
     if method == :FH && isnothing(psf)
         error("When method is 'FH', the pooled survival function 'psf' must be provided")
@@ -103,6 +120,7 @@ function logrank_test(km::KaplanMeier...; method=:LogRank, psf=nothing, fh=[1., 
     # The variance/covariance matrix of the estimates
     va = zeros(p, p)
 
+	# Accumulate the weights
     wtsum = 0.0
     wtcount = 0.0
 
@@ -165,13 +183,7 @@ function logrank_test(km::KaplanMeier...; method=:LogRank, psf=nothing, fh=[1., 
 
     # Compute the test statistic
     od = obs - expval
-    stat = try
-    	od[1:p-1]' * (va[1:p-1, 1:p-1] \ od[1:p-1])
-	catch SingularException
-		@warn("Singular covariance encountered in log rank test, using pseudo-inverse")
-    	od[1:p-1]' * pinv(va[1:p-1, 1:p-1]) * od[1:p-1]
-	end
-    dof = p - 1
+    stat, dof = get_stat(od, va, trend)
     pvalue = 1 - cdf(Chisq(dof), stat)
 
     return (stat=stat, dof=dof, pvalue=pvalue, observed=obs, expected=expval, var=va)
@@ -190,7 +202,7 @@ second stratum.  The null hypothesis is that the population survival
 functions are equal across all groups within each stratum.
 """
 function logrank_test(km::Vector{Vector{KaplanMeier}}; method=:LogRank,
-                      psf=fill(nothing, length(km)), fh=[1.0, 1.0])
+                      psf=fill(nothing, length(km)), trend=nothing, fh=[1.0, 1.0])
 
     if method == :FH && (nothing in psf)
         error("If method is FH, the pooled survival function psf must be provided")
@@ -204,9 +216,7 @@ function logrank_test(km::Vector{Vector{KaplanMeier}}; method=:LogRank,
 
     # Compute the test statistic
     od = observed - expected
-    p = size(km, 1)
-    stat = od[1:p-1]' * (variance[1:p-1, 1:p-1] \ od[1:p-1])
-    dof = p - 1
+    stat, dof = get_stat(od, variance, trend)
     pvalue = 1 - cdf(Chisq(dof), stat)
 
     return (stat=stat, dof=dof, pvalue=pvalue, observed=observed, expected=expected, var=variance)
@@ -278,21 +288,24 @@ equal.  The parameters of the function are vectors containing time
 (numeric), status (1=event, 0=censored), and group labels, with the
 group labels defining the samples to be compared.
 """
-function logrank_test(time, status, group; method=:LogRank, fh=[1., 1.])
+function logrank_test(time, status, group; method=:LogRank, trend=nothing, fh=[1., 1.])
 
     if !(length(time) == length(status) == length(group))
         @warn("'time', 'status', and 'group' must have equal lengths")
     end
 
+	# Get the survival function pooling over groups
     psf = if method == :FH
             fit(KaplanMeier, time, status)
         else
             nothing
         end
 
-    km, _ = make_km(time, status, group)
+    km, g = make_km(time, status, group)
 
-    return logrank_test(km...; method=method, psf=psf, fh=fh)
+	trendvec = isnothing(trend) ? nothing : [trend[x] for x in g]
+
+    return logrank_test(km...; method=method, psf=psf, trend=trendvec, fh=fh)
 end
 
 # Return a vector containing fitted Kaplan Meier values for the
@@ -333,13 +346,13 @@ S)^fh[2], with S being the estimated survival function at the previous
 time point (S is calculated by pooling over groups but calculating
 separately by stratum).
 """
-function logrank_test(time, status, group, strata; method=:LogRank, fh=[1.0, 1.0])
+function logrank_test(time, status, group, strata; method=:LogRank, trend=nothing, fh=[1.0, 1.0])
 
     if !(length(time) == length(status) == length(group) == length(strata))
-        @warn("'times', 'status', 'group', and 'strata' must have equal lengths")
+        @warn("'time', 'status', 'group', and 'strata' must have equal lengths")
     end
 
-    km, _, _ = make_km(time, status, group, strata)
+    km, _, g = make_km(time, status, group, strata)
 
     # Get the pooled survival function for each
     # stratum (pooling over groups within strata).
@@ -349,5 +362,15 @@ function logrank_test(time, status, group, strata; method=:LogRank, fh=[1.0, 1.0
             fill(nothing, length(km))
         end
 
-    return logrank_test(km; method=method, psf=psf, fh=fh)
+	trendvec = nothing
+	if !isnothing(trend)
+		for j in eachindex(g)
+			if !all(g[j] .== g[1])
+				@warn("Some strata do not have observations from all groups")
+			end
+		end
+		trendvec = [trend[x] for x in g[1]]
+	end
+
+    return logrank_test(km; method=method, psf=psf, trend=trendvec, fh=fh)
 end
