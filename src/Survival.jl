@@ -26,8 +26,9 @@ export
     nobs,
     dof,
     vcov,
-    stderror
+    stderror,
 
+	logrank_test
 
 abstract type AbstractEstimator end
 abstract type NonparametricEstimator <: AbstractEstimator end
