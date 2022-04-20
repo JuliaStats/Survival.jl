@@ -33,58 +33,58 @@
                             -0.3227814 1.2704726 -0.9476912;
                             -0.4101732 -0.9476912 1.3578644], atol=1e-5, rtol=1e-5)
 
-	# Test with stratification.
-	# Column 1 is time, column 2 is status, column 3 is group,
-	# column 4 is strata.
-	da = [1 1 1 1; 3 0 1 1; 5 1 1 1; 2 1 2 1; 4 1 2 1; 6 0 2 1
-		  8 1 1 1; 5 1 1 1; 2 0 1 2; 1 0 2 2; 3 1 2 2; 4 1 2 2]
-	km1 = Vector{Vector{KaplanMeier}}()
-	for j in 1:2 # stratum
-		kx = KaplanMeier[]
-		for i in 1:2 # group
-			ii = (da[:, 3] .== i) .& (da[:, 4] .== j)
-			push!(kx, fit(KaplanMeier, da[ii, 1], da[ii, 2]))
-		end
-		push!(km1, kx)
-	end
+    # Test with stratification.
+    # Column 1 is time, column 2 is status, column 3 is group,
+    # column 4 is strata.
+    da = [1 1 1 1; 3 0 1 1; 5 1 1 1; 2 1 2 1; 4 1 2 1; 6 0 2 1
+          8 1 1 1; 5 1 1 1; 2 0 1 2; 1 0 2 2; 3 1 2 2; 4 1 2 2]
+    km1 = Vector{Vector{KaplanMeier}}()
+    for j in 1:2 # stratum
+        kx = KaplanMeier[]
+        for i in 1:2 # group
+            ii = (da[:, 3] .== i) .& (da[:, 4] .== j)
+            push!(kx, fit(KaplanMeier, da[ii, 1], da[ii, 2]))
+        end
+        push!(km1, kx)
+    end
     kt1 = logrank_test(km1)
-	kt2 = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4])
-	for kt in [kt1, kt2]
-		@test isapprox(kt.stat, 0.09065547, atol=1e-5, rtol=1e-5)
-		@test isapprox(kt.dof, 1)
-		@test isapprox(kt.expected, [4.3, 3.7], atol=0.1, rtol=0.1)
-	end
+    kt2 = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4])
+    for kt in [kt1, kt2]
+        @test isapprox(kt.stat, 0.09065547, atol=1e-5, rtol=1e-5)
+        @test isapprox(kt.dof, 1)
+        @test isapprox(kt.expected, [4.3, 3.7], atol=0.1, rtol=0.1)
+    end
 
-	# Test with Wilcoxon weights
-	# Stata seems to report the unweighted expected values
-	# whereas we are reporing the weighted expected values,
-	# so the expected values are not tested here.
-	kt = logrank_test(da[:,1], da[:,2], da[:,3]; method=:WBG)
-	@test isapprox(kt.stat, 0.51362, atol=1e-5, rtol=1e-5)
-	@test isapprox(kt.dof, 1)
+    # Test with Wilcoxon weights
+    # Stata seems to report the unweighted expected values
+    # whereas we are reporing the weighted expected values,
+    # so the expected values are not tested here.
+    kt = logrank_test(da[:,1], da[:,2], da[:,3]; method=:WBG)
+    @test isapprox(kt.stat, 0.51362, atol=1e-5, rtol=1e-5)
+    @test isapprox(kt.dof, 1)
 
-	# Test with Wilcoxon weights and strata
-	kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:WBG)
-	@test isapprox(kt.stat, 0.10810811, atol=1e-5, rtol=1e-5)
-	@test isapprox(kt.dof, 1)
+    # Test with Wilcoxon weights and strata
+    kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:WBG)
+    @test isapprox(kt.stat, 0.10810811, atol=1e-5, rtol=1e-5)
+    @test isapprox(kt.dof, 1)
 
-	# Test with Tarone-Ware weights and strata
-	kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:TW)
-	@test isapprox(kt.stat, 0.10857866, atol=1e-5, rtol=1e-5)
-	@test isapprox(kt.dof, 1)
+    # Test with Tarone-Ware weights and strata
+    kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:TW)
+    @test isapprox(kt.stat, 0.10857866, atol=1e-5, rtol=1e-5)
+    @test isapprox(kt.dof, 1)
 
-	# Test with Fleming-Harrington weights
-	kt = logrank_test(da[:,1], da[:,2], da[:,3]; method=:FH)
-	@test isapprox(kt.stat, 0.9047277, atol=1e-5, rtol=1e-5)
-	@test isapprox(kt.dof, 1)
+    # Test with Fleming-Harrington weights
+    kt = logrank_test(da[:,1], da[:,2], da[:,3]; method=:FH)
+    @test isapprox(kt.stat, 0.9047277, atol=1e-5, rtol=1e-5)
+    @test isapprox(kt.dof, 1)
 
-	# Test with Fleming-Harrington weights and strata
-	kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:FH)
-	@test isapprox(kt.stat, 0.11739737, atol=1e-5, rtol=1e-5)
-	@test isapprox(kt.dof, 1)
+    # Test with Fleming-Harrington weights and strata
+    kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:FH)
+    @test isapprox(kt.stat, 0.11739737, atol=1e-5, rtol=1e-5)
+    @test isapprox(kt.dof, 1)
 
-	# Another test with Fleming-Harrington weights and strata
-	kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:FH, fh=[0.6, 0.2])
-	@test isapprox(kt.stat, 0.63748839, atol=1e-5, rtol=1e-5)
-	@test isapprox(kt.dof, 1)
+    # Another test with Fleming-Harrington weights and strata
+    kt = logrank_test(da[:,1], da[:,2], da[:,3], da[:,4]; method=:FH, fh=[0.6, 0.2])
+    @test isapprox(kt.stat, 0.63748839, atol=1e-5, rtol=1e-5)
+    @test isapprox(kt.dof, 1)
 end

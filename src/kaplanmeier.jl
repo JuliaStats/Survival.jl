@@ -165,7 +165,12 @@ function logrank_test(km::KaplanMeier...; method=:LogRank, psf=nothing, fh=[1., 
 
     # Compute the test statistic
     od = obs - expval
-    stat = od[1:p-1]' * (va[1:p-1, 1:p-1] \ od[1:p-1])
+    stat = try
+    	od[1:p-1]' * (va[1:p-1, 1:p-1] \ od[1:p-1])
+	catch SingularException
+		@warn("Singular covariance encountered in log rank test, using pseudo-inverse")
+    	od[1:p-1]' * pinv(va[1:p-1, 1:p-1]) * od[1:p-1]
+	end
     dof = p - 1
     pvalue = 1 - cdf(Chisq(dof), stat)
 
@@ -175,13 +180,14 @@ end
 """
     logrank_test(km) -> NamedTuple
 
-Conduct a logrank test for the null hypothesis that n population
-survival functions are equal using stratified data.  The parameter km
-is a vector of vectors of fitted survival functions of type
-'KaplanMeier'.  The outer index of this vector of vectors corresponds
-to distinct strata, and the inner index corresponds to groups.  The
-null hypothesis is that the population survival functions are equal
-across all groups within each stratum.
+Test the null hypothesis that n population survival functions are
+equal using stratified data.  The parameter km is a vector of vectors
+of fitted survival functions of type 'KaplanMeier'.  The outer level
+of this vector of vectors corresponds to distinct strata, i.e. km[1]
+is the first stratum, km[2] is the second stratum, etc.  The inner
+level corresponds to groups, i.e. km[2][3] is the third group in the
+second stratum.  The null hypothesis is that the population survival
+functions are equal across all groups within each stratum.
 """
 function logrank_test(km::Vector{Vector{KaplanMeier}}; method=:LogRank,
                       psf=fill(nothing, length(km)), fh=[1.0, 1.0])
@@ -206,8 +212,9 @@ function logrank_test(km::Vector{Vector{KaplanMeier}}; method=:LogRank,
     return (stat=stat, dof=dof, pvalue=pvalue, observed=observed, expected=expected, var=variance)
 end
 
-# Return the indices where a new consecutive run of identival values
-# occurs in the sorted array 'v'.
+# Return the indices where a new consecutive run of identical values
+# occurs in the sorted array 'v'.  The first such index is always 1,
+# and the final index length(v) + 1 is included as a sentinel.
 function index_splits(v)
     jj = [i for i in 2:length(v) if v[i] != v[i-1]]
     prepend!(jj, 1)
@@ -266,10 +273,10 @@ end
 """
     logrank_test(times, status, group) -> NamedTuple
 
-Conduct a hypothesis test for the null hypothesis that n population
-survival functions are equal.  The parameters of the function are
-vectors containing time, status, and group values, with the group
-values defining the distinct populations to be compared.
+Test the null hypothesis that n population survival functions are
+equal.  The parameters of the function are vectors containing time
+(numeric), status (1=event, 0=censored), and group labels, with the
+group labels defining the samples to be compared.
 """
 function logrank_test(time, status, group; method=:LogRank, fh=[1., 1.])
 
@@ -308,11 +315,12 @@ end
 """
     logrank_test(times, status, group, strata; method, fh) -> NamedTuple
 
-Conduct a hypothesis test for the null hypothesis that n population
-survival functions are equal, using stratified data.  The parameters
-of the function are vectors containing time, status, group, and strata
-values.  The null hypothesis being tested is that the population
-survival functions are identical across groups within each stratum.
+Test the null hypothesis that n population survival functions are
+equal, using stratified data.  The parameters of the function are
+vectors containing time (numeric), status (1=event, 0=censored), group
+labels, and strata labels.  The null hypothesis being tested is that
+the population survival functions are identical across groups within
+each stratum.
 
 The 'method' argument determines the weighting used in the test.
 Options are :LogRank (all weight are 1, the default), :WBG
@@ -322,7 +330,8 @@ Options are :LogRank (all weight are 1, the default), :WBG
 survival function).  If method is :FH, then the 'fh' argument is used
 to specify the exponents in the weight, which is S^fh[1] * (1 -
 S)^fh[2], with S being the estimated survival function at the previous
-time point (pooling over groups but calculated separately by stratum).
+time point (S is calculated by pooling over groups but calculating
+separately by stratum).
 """
 function logrank_test(time, status, group, strata; method=:LogRank, fh=[1.0, 1.0])
 
