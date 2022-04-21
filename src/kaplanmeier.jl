@@ -326,7 +326,7 @@ function pooled_km(time::AbstractVector, status::AbstractVector, strata::Abstrac
 end
 
 """
-    logrank_test(times, status, group, strata; method, fh) -> NamedTuple
+    logrank_test(times, status, group, strata; method, trend, fh) -> NamedTuple
 
 Test the null hypothesis that n population survival functions are
 equal, using stratified data.  The parameters of the function are
@@ -345,6 +345,11 @@ to specify the exponents in the weight, which is S^fh[1] * (1 -
 S)^fh[2], with S being the estimated survival function at the previous
 time point (S is calculated by pooling over groups but calculating
 separately by stratum).
+
+The 'trend' argument conducts a trend version of the logrank test.  The
+value of trend is a dictionary mapping group labels to numeric scores
+used to weight the statistic in favor of detecting trends that reflect
+the scores.
 """
 function logrank_test(time, status, group, strata; method=:LogRank, trend=nothing, fh=[1.0, 1.0])
 
