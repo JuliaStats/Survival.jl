@@ -70,7 +70,9 @@ prio   0.091521   0.0286469   3.1948      0.0014
 Several functions act on a `CoxModel` object.  
 
 We can extract coefficients and the variance matrix of the fitted parameter
-vector by
+vector.  
+
+The estimates can be extracted by
 
 ```julia
 julia> coef(fitcox)
@@ -84,7 +86,7 @@ julia> coef(fitcox)
   0.09152099594619753
 ```
 and standard errors by `stderror(fitcox)`.  
-The entire variance matrix is given by
+The entire variance matrix is extracted by
 
 ```julia
 julia> vcov(fitcox)
