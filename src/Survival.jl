@@ -2,7 +2,6 @@ module Survival
 
 using Distributions
 using LinearAlgebra
-using PositiveFactorizations
 using StatsBase
 using StatsModels
 using Optim
