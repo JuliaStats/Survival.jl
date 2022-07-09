@@ -1,11 +1,11 @@
 module Survival
 
+using Compat
 using Distributions
 using LinearAlgebra
-using PositiveFactorizations
+using Optim
 using StatsBase
 using StatsModels
-using Optim
 
 export
     EventTime,

@@ -1,6 +1,6 @@
 # Some utility functions to compute Cox regression
 
-promote_nonmissing(::Type{T}) where {T} = Base.promote_op(/, T, T)
+promote_nonmissing(::Type{T}) where {T} = typeof(one(T) / one(T))
 promote_nonmissing(::Type{Union{T,Missing}}) where {T} = promote_nonmissing(T)
 
 struct CoxSum{T,N}
@@ -130,10 +130,8 @@ end
 
 function _cox_fgh!(β, grad, hes, c::CoxAux{T}) where T
     update_cox!(c, β, (hes !== nothing) | (grad !== nothing))
-    X, ξ, Xβ, θ, Xθ, ξθ, λ, fs, ls  =
-        c.X, c.ξ, c.Xβ, c.θ, c.Xθ, c.ξθ, c.λ, c.fs, c.ls
-    R = Base.promote_op(/, T, T)
-    y = zero(R)
+    @compat (; X, ξ, Xβ, θ, Xθ, ξθ, λ, fs, ls) = c
+    y = zero(T) / one(T)
 
     if hes !== nothing
         fill!(hes, 0)
@@ -143,7 +141,7 @@ function _cox_fgh!(β, grad, hes, c::CoxAux{T}) where T
     end
     if grad !== nothing || hes !== nothing
         # preallocate
-        Z = zeros(R, length(β))
+        Z = zeros(typeof(y), length(β))
     end
 
     @inbounds for i in 1:length(fs)

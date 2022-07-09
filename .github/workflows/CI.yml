@@ -1,12 +1,9 @@
 name: CI
 on:
-  pull_request:
-    branches:
-      - master
   push:
-    branches:
-      - master
-    tags: '*'
+    branches: [master]
+    tags: ["*"]
+  pull_request:
 jobs:
   test:
     name: Julia ${{ matrix.version }} - ${{ matrix.os }} - ${{ matrix.arch }} - ${{ github.event_name }}
@@ -15,7 +12,7 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - '1.2'
+          - '1.6'
           - '1'
           - 'nightly'
         os:
@@ -49,20 +46,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: julia-actions/setup-julia@v1
-        with:
-          version: '1'
-      - run: |
-          julia --project=docs -e '
-            using Pkg
-            Pkg.develop(PackageSpec(path=pwd()))
-            Pkg.instantiate()'
-      - run: |
-          julia --project=docs -e '
-            using Documenter: doctest
-            using Survival
-            doctest(Survival)'
-      - run: julia --project=docs docs/make.jl
+      - uses: julia-actions/julia-buildpkg@latest
+      - uses: julia-actions/julia-docdeploy@latest
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           DOCUMENTER_KEY: ${{ secrets.DOCUMENTER_KEY }}
