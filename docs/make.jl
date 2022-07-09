@@ -6,11 +6,11 @@ makedocs(
     authors = "Alex Arslan",
     pages = [
         "Home" => "index.md",
+        "Getting Started" => "getting_started.md",
         "Event Times" => "events.md",
         "Kaplan-Meier" => "km.md",
         "Nelson-Aalen" => "na.md",
         "Cox" => "cox.md",
-        "Getting Started" => "getting_started.md"
     ],
 )
 
