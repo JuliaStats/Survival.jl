@@ -130,8 +130,7 @@ end
 
 function _cox_fgh!(β, grad, hes, c::CoxAux{T}) where T
     update_cox!(c, β, (hes !== nothing) | (grad !== nothing))
-    X, ξ, Xβ, θ, Xθ, ξθ, λ, fs, ls  =
-        c.X, c.ξ, c.Xβ, c.θ, c.Xθ, c.ξθ, c.λ, c.fs, c.ls
+    @compat (; X, ξ, Xβ, θ, Xθ, ξθ, λ, fs, ls) = c
     y = zero(T) / one(T)
 
     if hes !== nothing
