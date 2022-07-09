@@ -10,6 +10,7 @@ makedocs(
         "Kaplan-Meier" => "km.md",
         "Nelson-Aalen" => "na.md",
         "Cox" => "cox.md",
+        "Getting Started" => "getting_started.md"
     ],
 )
 
