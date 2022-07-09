@@ -1,41 +1,45 @@
 # Getting Started
 
-## Cox Proportional Hazards model
-This tutorial shows how to fit a cox model and set up the `EventTimes` for right
-censored events.  
+## Cox proportional hazards regression model
+
+This tutorial shows how to fit a Cox model and set up the [`EventTime`](@ref)
+values for right censored events.
 
 ### Dataset
-We first read in a data set containing criminal recidivism data, which can be
-found in the RcmdrPlugin.survival package in R, with the following link.
-[RcmdrPlugin.survival](https://www.rdocumentation.org/packages/RcmdrPlugin.survival/versions/1.2-2/topics/Rossi)  
 
-The `rossi` data set is originally from Rossi et al. (1980). 
+In this example we'll use a table containing criminal
+[recidivism](https://en.wikipedia.org/wiki/Recidivism) data from Rossi et al. (1980).
 The data pertain to 432 convicts who were released from Maryland state prisons
-in the 1970s and who were followed up for one year after release. 
-Half the released convicts were assigned at random to an experimental treatment
-in which they were given financial aid; half did not receive aid.
+in the 1970s and who were followed for one year after release.
+The released convicts were randomly assigned to receive or not receive financial aid
+with equal probability.
+The outcome of interest is the time from release to rearrest.
 
-### Fitting a cox model
-To read in the dataset in the `DataFrame` format we use a few packages
+The dataset is available as a CSV file in this package's `test/data/` directory.
+To load the data as a `DataFrame`, we'll use the [CSV](https://github.com/JuliaData/CSV.jl)
+and [DataFrames](https://github.com/JuliaData/DataFrames.jl) packages.
 
-```julia
-julia> using Survival
-julia> using DataFrames
-julia> using StatsModels
-julia> using CSV
+```julia-repl
+julia> using Survival, StatsModels, CSV, DataFrames
 
-julia> rossi = CSV.read(abspath(joinpath(pwd(), "..", "..", "test", "data", "rossi.csv")), DataFrame);
+julia> rossi = CSV.read(joinpath(pkgdir(Survival), "test", "data", "rossi.csv")), DataFrame);
 ```
 
-We now add the event times in the format (times, non-censoring indicator) where
-no censoring (arrest) is indicated by a `1`
+### Fitting the model
 
-```julia
-julia> rossi.event = EventTime.(rossi.week, rossi.arrest .== 1)
+We now construct the event times used as the model response.
+The `EventTime` constructor accepts a time value and an indicator of whether the value
+was observed (`true`) or right-censored (`false`).
+The times in this data frame are in the column `week` and the arrest status in `arrest`.
+An `arrest` value of 1 indicates an observed event (arrest) and 0 indicates censoring.
+
+```julia-repl
+julia> rossi.event = EventTime.(rossi.week, rossi.arrest .== 1);
+
 julia> first(rossi, 10)
 5×10 DataFrame
- Row │ arrest  week   fin    age    race   wexp   mar    paro   prio   event     
-     │ Int64   Int64  Int64  Int64  Int64  Int64  Int64  Int64  Int64  EventTim… 
+ Row │ arrest  week   fin    age    race   wexp   mar    paro   prio   event
+     │ Int64   Int64  Int64  Int64  Int64  Int64  Int64  Int64  Int64  EventTim…
 ─────┼───────────────────────────────────────────────────────────────────────────
    1 │      1     20      0     27      1      0      0      1      3  20
    2 │      1     17      0     18      1      0      0      1      8  17
@@ -43,10 +47,11 @@ julia> first(rossi, 10)
    4 │      0     52      1     23      1      1      1      1      1  52+
    5 │      0     52      0     19      0      1      0      1      3  52+
 ```
-To fit the cox model, use the `coxph` function
 
-```julia
-julia> fitcox = coxph(@formula(event ~ fin + age + race + wexp + mar + paro + prio), rossi)
+To fit the Cox model, we can use `fit(CoxModel, ...)` or the shorthand `coxph(...)`.
+
+```julia-repl
+julia> model = coxph(@formula(event ~ fin + age + race + wexp + mar + paro + prio), rossi)
 StatsModels.TableRegressionModel{CoxModel{Float64}, Matrix{Float64}}
 
 event ~ fin + age + race + wexp + mar + paro + prio
@@ -65,17 +70,15 @@ prio   0.091521   0.0286469   3.1948      0.0014
 ────────────────────────────────────────────────
 ```
 
-### Utilities
+### Accessing values
 
-Several functions act on a `CoxModel` object.  
+Many of the common functions for accessing model parameters used in packages such as
+[GLM](https://github.com/JuliaStats/GLM.jl) are extended for use with `CoxModel`s.
 
-We can extract coefficients and the variance matrix of the fitted parameter
-vector.  
+For example, the model coefficient estimates can be extracted with `coef`:
 
-The estimates can be extracted by
-
-```julia
-julia> coef(fitcox)
+```julia-repl
+julia> coef(model)
 7-element Vector{Float64}:
  -0.3794158823466362
  -0.057429889713653676
@@ -85,29 +88,13 @@ julia> coef(fitcox)
  -0.08486148372086805
   0.09152099594619753
 ```
-and standard errors by `stderror(fitcox)`.  
-The entire variance matrix is extracted by
 
-```julia
-julia> vcov(fitcox)
-7×7 Matrix{Float64}:
-  0.0366261    -0.000258838  …   0.00266155   -0.00020223
- -0.000258838   0.000483947      0.000473736  -1.93851e-5
- -0.00374361   -0.00030333      -0.00189336    0.000504948
-  6.55182e-5   -0.00143737      -0.00162298    0.00170044
-  0.0018773    -0.00101833      -0.004449     -0.000483896
-  0.00266155    0.000473736  …   0.0383206     0.000842758
- -0.00020223   -1.93851e-5       0.000842758   0.000820643
-```
+Similarly, the standard errors of the estimates are accessible with `stderror(model)`
+and the full variance-covariance matrix with `vcov(model)`.
 
-Finally there is a few functions that might be useful.  
-`loglikelihood(fitcox)`   
-`nullloglikelihood(fitcox)`   
-`cox_fit.model.score`   
-`dof(fitcox)`   
-`nobs(fitcox)`   
-`coeftable(fitcox).cols`   
-
-
-
-
+Other available functions include:
+- `loglikelihood`, the log likelihood of the fitted model
+- `nullloglikelihood`, the log likelihood of the null model
+- `dof`, degrees of freedom
+- `nobs`, the number of observations used to fit the model
+- `coeftable`, a table of coefficient names, estimates, standard errors, z-values, and p-values
