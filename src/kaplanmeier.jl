@@ -36,7 +36,7 @@ stderr_update(::Type{KaplanMeier}, gw, dᵢ, nᵢ) = gw + dᵢ / (nᵢ * (nᵢ -
 Compute the pointwise log-log transformed confidence intervals for the survivor
 function as a vector of tuples.
 """
-function StatsBase.confint(km::KaplanMeier, α::Float64=0.05)
+function StatsAPI.confint(km::KaplanMeier, α::Float64=0.05)
     q = quantile(Normal(), 1 - α/2)
     return map(km.survival, km.stderr) do srv, se
         l = log(-log(srv))
@@ -52,7 +52,7 @@ Given a vector of times to events and a corresponding vector of indicators that
 denote whether each time is an observed event or is right censored, compute the
 Kaplan-Meier estimate of the survivor function.
 """
-StatsBase.fit(::Type{KaplanMeier}, times, status)
+StatsAPI.fit(::Type{KaplanMeier}, times, status)
 
 """
     fit(KaplanMeier, ets) -> KaplanMeier
@@ -60,4 +60,4 @@ StatsBase.fit(::Type{KaplanMeier}, times, status)
 Compute the Kaplan-Meier estimate of the survivor function from a vector of
 [`EventTime`](@ref) values.
 """
-StatsBase.fit(::Type{KaplanMeier}, ets)
+StatsAPI.fit(::Type{KaplanMeier}, ets)

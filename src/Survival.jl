@@ -4,6 +4,7 @@ using Compat
 using Distributions
 using LinearAlgebra
 using Optim
+using StatsAPI
 using StatsBase
 using StatsModels
 
@@ -21,10 +22,12 @@ export
     CoxModel,
     coxph,
     coef,
+    modelmatrix,
     loglikelihood,
     nullloglikelihood,
     nobs,
     dof,
+    dof_residual,
     vcov,
     stderror
 

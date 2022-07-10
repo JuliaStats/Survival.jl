@@ -24,8 +24,8 @@ using Greenwood's formula:
 
 ```@docs
 Survival.KaplanMeier
-StatsBase.fit(::Type{KaplanMeier}, ::Any, ::Any)
-StatsBase.confint(::KaplanMeier, ::Float64)
+StatsAPI.fit(::Type{KaplanMeier}, ::Any, ::Any)
+StatsAPI.confint(::KaplanMeier, ::Float64)
 ```
 
 ## References

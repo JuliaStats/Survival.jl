@@ -87,7 +87,7 @@ struct CoxModel{T<:Real} <: RegressionModel
     vcov::Matrix{T}
 end
 
-function StatsBase.coeftable(obj::CoxModel)
+function StatsAPI.coeftable(obj::CoxModel)
     β = coef(obj)
     se = stderror(obj)
     z_score = β ./ se
@@ -105,18 +105,23 @@ function Base.show(io::IO, model::CoxModel)
     show(io, ct)
 end
 
-StatsBase.coef(obj::CoxModel) = obj.β
+StatsAPI.coef(obj::CoxModel) = obj.β
 
-StatsBase.loglikelihood(obj::CoxModel) = obj.loglik
-StatsBase.nullloglikelihood(obj::CoxModel{T}) where {T} = -_cox_f(obj.β * zero(T), obj.aux)
+StatsAPI.modelmatrix(obj::CoxModel) = obj.aux.X
 
-StatsBase.nobs(obj::CoxModel) = size(obj.aux.X, 1)
+StatsAPI.loglikelihood(obj::CoxModel) = obj.loglik
 
-StatsBase.dof(obj::CoxModel) = length(obj.β)
+StatsAPI.nullloglikelihood(obj::CoxModel) = -_cox_f(zero(coef(obj)), obj.aux)
 
-StatsBase.vcov(obj::CoxModel) = obj.vcov
+StatsAPI.nobs(obj::CoxModel) = size(modelmatrix(obj), 1)
 
-StatsBase.stderror(obj::CoxModel) = sqrt.(diag(vcov(obj)))
+StatsAPI.dof(obj::CoxModel) = length(coef(obj))
+
+StatsAPI.dof_residual(obj::CoxModel) = nobs(obj) - dof(obj)
+
+StatsAPI.vcov(obj::CoxModel) = obj.vcov
+
+StatsAPI.stderror(obj::CoxModel) = sqrt.(diag(vcov(obj)))
 
 #compute negative loglikelihood
 
@@ -209,7 +214,7 @@ Given a matrix `M` of predictors and a corresponding vector of events, compute t
 Cox proportional hazard model estimate of coefficients. Returns a `CoxModel`
 object.
 """
-function StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; tol=1e-4, l2_cost=0)
+function StatsAPI.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; tol=1e-4, l2_cost=0)
     index_perm = sortperm(y)
     X = M[index_perm,:]
     s = y[index_perm]

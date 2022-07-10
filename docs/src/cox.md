@@ -16,7 +16,7 @@ the vector of coefficients in the model.
 ## API
 
 ```@docs
-StatsBase.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
+StatsAPI.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
 ```
 
 ## References
