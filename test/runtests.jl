@@ -256,3 +256,5 @@ x7   0.0914971  0.0286485   3.19378     0.0014
     @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
     @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol=1e-8
 end
+
+include("logrank_tests.jl")
