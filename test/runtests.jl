@@ -7,6 +7,7 @@ using Distributions
 using LinearAlgebra
 using StatsBase
 using StatsModels
+using Tables
 
 @testset "Event times" begin
     @test isevent(EventTime{Int}(44, true))
@@ -279,4 +280,26 @@ x7   0.0914971  0.0286485   3.19378     0.0014
     outcome_fincatracecat = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
     @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol=1e-8
+end
+
+@testset "EventTable" begin
+    et = EventTable([4, 1, 3, 1, 5, 2, 3, 4], [0, 0, 1, 0, 0, 1, 0, 0])
+    @test Tables.istable(et)
+    @test Tables.columnaccess(et)
+    @test Tables.schema(et) isa Tables.Schema{(:time, :nevents, :ncensored, :natrisk),NTuple{4,Int}}
+    @test collect(Tables.rows(et)) == [(; time=1, nevents=0, ncensored=2, natrisk=8),
+                                       (; time=2, nevents=1, ncensored=0, natrisk=6),
+                                       (; time=3, nevents=1, ncensored=1, natrisk=5),
+                                       (; time=4, nevents=0, ncensored=2, natrisk=3),
+                                       (; time=5, nevents=0, ncensored=1, natrisk=1)]
+    et2 = copy(et)
+    @test et == et2
+    @test et !== et2
+    @test all(1:4) do i
+        a = getfield(et, i)
+        b = getfield(et2, i)
+        return a == b && a !== b
+    end
+    @test_throws DimensionMismatch EventTable(1:10, false:true)
+    @test EventTable(Float32[], Int[]) == EventTable{Float32}(Float32[], Int[], Int[], Int[])
 end

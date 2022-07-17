@@ -7,9 +7,11 @@ using Optim
 using StatsAPI
 using StatsBase
 using StatsModels
+using Tables
 
 export
     EventTime,
+    EventTable,
     isevent,
     iscensored,
 
