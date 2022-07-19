@@ -22,9 +22,9 @@ function _estimator(::Type{S}, ets::AbstractVector{EventTime{T}}) where {S,T}
     outlen = _n_unique_times(ets)
 
     nobs = length(ets)
-    dᵢ = 0                   # Number of observed events at time t
-    cᵢ = 0                   # Number of censored events at time t
-    nᵢ = nobs                # Number remaining at risk at time t
+    dᵢ::Int = 0              # Number of observed events at time t
+    cᵢ::Int = 0              # Number of censored events at time t
+    nᵢ::Int = nobs           # Number remaining at risk at time t
     es = estimator_start(S)  # Estimator starting point
     gw = stderr_start(S)     # Standard Error starting point
 
