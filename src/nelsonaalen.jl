@@ -35,7 +35,7 @@ stderr_update(::Type{NelsonAalen}, gw, dᵢ, nᵢ) = gw + dᵢ * (nᵢ - dᵢ) /
 Compute the pointwise confidence intervals for the cumulative hazard
 function as a vector of tuples.
 """
-function StatsBase.confint(na::NelsonAalen, α::Float64=0.05)
+function StatsAPI.confint(na::NelsonAalen, α::Float64=0.05)
     q = quantile(Normal(), 1 - α/2)
     return map(na.chaz, na.stderr) do srv, se
         srv - q * se, srv + q * se
@@ -49,7 +49,7 @@ Given a vector of times to events and a corresponding vector of indicators that
 denote whether each time is an observed event or is right censored, compute the
 Nelson-Aalen estimate of the cumulative hazard rate function.
 """
-StatsBase.fit(::Type{NelsonAalen}, times, status)
+StatsAPI.fit(::Type{NelsonAalen}, times, status)
 
 """
     fit(NelsonAalen, ets) -> NelsonAalen
@@ -57,4 +57,4 @@ StatsBase.fit(::Type{NelsonAalen}, times, status)
 Compute the Nelson-Aalen estimate of the cumulative hazard rate function from a
 vector of [`EventTime`](@ref) values.
 """
-StatsBase.fit(::Type{NelsonAalen}, ets)
+StatsAPI.fit(::Type{NelsonAalen}, ets)

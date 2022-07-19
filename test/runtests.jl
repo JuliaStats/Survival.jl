@@ -198,6 +198,8 @@ end
 
     outcome_without_formula = coxph(regressor_matrix, event_vector)
 
+    @test modelmatrix(outcome) == modelmatrix(outcome_without_formula)
+
     @test sprint(show, outcome_without_formula) == """
 CoxModel{Float64}
 
@@ -215,6 +217,9 @@ x7   0.0914971  0.0286485   3.19378     0.0014
 ──────────────────────────────────────────────"""
 
     coef_matrix = ModelMatrix(ModelFrame(@formula(event ~ 0 + fin + age + race + wexp + mar + paro + prio), rossi)).m
+
+    @test modelmatrix(outcome) == coef_matrix[sortperm(event_vector), :]
+
     outcome_from_matrix     = coxph(coef_matrix, rossi.event; tol=1e-8, l2_cost=0)
     outcome_from_matrix32   = coxph(Float32.(coef_matrix), rossi.event; tol=1e-5)
     outcome_from_matrix_int = coxph(Int64.(coef_matrix), rossi.event; tol=1e-6, l2_cost=0.0)
@@ -234,6 +239,7 @@ x7   0.0914971  0.0286485   3.19378     0.0014
     @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix_int) atol=1e-5
     @test nobs(outcome) == size(rossi, 1)
     @test dof(outcome) == 7
+    @test dof_residual(outcome) == 425
     @test loglikelihood(outcome) > nullloglikelihood(outcome)
     @test all(x->x > 0, eigen(outcome.model.fischer_info).values)
     @test outcome.model.fischer_info * vcov(outcome) ≈ I atol=1e-10

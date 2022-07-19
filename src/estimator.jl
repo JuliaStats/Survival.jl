@@ -75,9 +75,9 @@ function _estimator(::Type{S}, ets::AbstractVector{EventTime{T}}) where {S,T}
     return S{T}(times, nevents, ncensor, natrisk, estimator, stderr)
 end
 
-function StatsBase.fit(::Type{S},
-                       times::AbstractVector{T},
-                       status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator,T}
+function StatsAPI.fit(::Type{S},
+                      times::AbstractVector{T},
+                      status::AbstractVector{<:Integer}) where {S<:NonparametricEstimator,T}
     ntimes = length(times)
     nstatus = length(status)
     if ntimes != nstatus
@@ -87,7 +87,7 @@ function StatsBase.fit(::Type{S},
     return fit(S, map(EventTime{T}, times, status))
 end
 
-function StatsBase.fit(::Type{S}, ets::AbstractVector{<:EventTime}) where S<:NonparametricEstimator
+function StatsAPI.fit(::Type{S}, ets::AbstractVector{<:EventTime}) where S<:NonparametricEstimator
     isempty(ets) && throw(ArgumentError("can't compute $(nameof(S)) from 0 observations"))
     return _estimator(S, issorted(ets) ? ets : sort(ets))
 end
