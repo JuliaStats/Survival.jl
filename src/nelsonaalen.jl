@@ -46,7 +46,15 @@ end
     fit(NelsonAalen, times, status) -> NelsonAalen
 
 Given a vector of times to events and a corresponding vector of indicators that
-dictate whether each time is an observed event or is right censored, compute the
+denote whether each time is an observed event or is right censored, compute the
 Nelson-Aalen estimate of the cumulative hazard rate function.
 """
 StatsBase.fit(::Type{NelsonAalen}, times, status)
+
+"""
+    fit(NelsonAalen, ets) -> NelsonAalen
+
+Compute the Nelson-Aalen estimate of the cumulative hazard rate function from a
+vector of [`EventTime`](@ref) values.
+"""
+StatsBase.fit(::Type{NelsonAalen}, ets)
