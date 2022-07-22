@@ -233,9 +233,10 @@ x7   0.0914971  0.0286485   3.19378     0.0014
         -0.0848711  0.195757   -0.433554  0.6646;
          0.0914971  0.0286485   3.19378   0.0014
     ]
-    
-    # expected wald intervals from the coxph 
-    # function in the survival package in R
+
+    # Results generated from R 4.2.0 using survival 3.2.13
+    # fit = coxph(Surv(week, arrest) ~ fin + age + race + wexp + mar + paro + prio, rossi)
+    # confint(fit) 
     expected_wald_intervals = [
         -0.75451906 -0.004325277; 
         -0.10055591 -0.014319573;
