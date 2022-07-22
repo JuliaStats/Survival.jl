@@ -31,13 +31,13 @@ estimator_update(::Type{KaplanMeier}, es, dᵢ, nᵢ) = es * (1 - dᵢ / nᵢ) #
 stderr_update(::Type{KaplanMeier}, gw, dᵢ, nᵢ) = gw + dᵢ / (nᵢ * (nᵢ - dᵢ)) # StdErr update rule
 
 """
-    confint(km::KaplanMeier, α=0.05)
+    confint(km::KaplanMeier; level=0.05)
 
 Compute the pointwise log-log transformed confidence intervals for the survivor
 function as a vector of tuples.
 """
-function StatsAPI.confint(km::KaplanMeier, α::Float64=0.05)
-    q = quantile(Normal(), 1 - α/2)
+function StatsAPI.confint(km::KaplanMeier; level::Real=0.05)
+    q = quantile(Normal(), 1 - level/2)
     return map(km.survival, km.stderr) do srv, se
         l = log(-log(srv))
         a = q * se / log(srv)

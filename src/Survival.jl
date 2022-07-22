@@ -41,4 +41,12 @@ include("kaplanmeier.jl")
 include("nelsonaalen.jl")
 include("cox.jl")
 
+## Deprecations
+
+@noinline function StatsAPI.confint(estimator::NonparametricEstimator, alpha::Float64)
+    Base.depwarn("`confint(estimator, alpha)` is deprecated, use " *
+                 "`confint(estimator; level=alpha)` instead.", :confint)
+    return confint(estimator; level=alpha)
+end
+
 end # module

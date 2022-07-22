@@ -148,6 +148,8 @@ end
     @test all(f->getfield(km, f) ≈ getfield(km_et, f), fieldnames(KaplanMeier))
 
     @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
+
+    @test_deprecated confint(km, 0.05)
 end
 
 @testset "Nelson-Aalen" begin
@@ -179,10 +181,12 @@ end
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
     @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.025, length(na.chaz)) rtol=1e-8
     @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.975, length(na.chaz)) rtol=1e-8
-    na_conf = confint(na, 0.01)
+    na_conf = confint(na; level=0.01)
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
     @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.005, length(na.chaz)) rtol=1e-8
     @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.995, length(na.chaz)) rtol=1e-8
+
+    @test_deprecated confint(na, 0.05)
 end
 
 

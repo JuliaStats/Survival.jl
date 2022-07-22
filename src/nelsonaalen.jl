@@ -30,13 +30,13 @@ estimator_update(::Type{NelsonAalen}, es, dᵢ, nᵢ) = es + dᵢ / nᵢ # Estim
 stderr_update(::Type{NelsonAalen}, gw, dᵢ, nᵢ) = gw + dᵢ * (nᵢ - dᵢ) / (nᵢ^3) # StdErr update rule
 
 """
-    confint(na::NelsonAalen, α=0.05)
+    confint(na::NelsonAalen; level=0.05)
 
 Compute the pointwise confidence intervals for the cumulative hazard
 function as a vector of tuples.
 """
-function StatsAPI.confint(na::NelsonAalen, α::Float64=0.05)
-    q = quantile(Normal(), 1 - α/2)
+function StatsAPI.confint(na::NelsonAalen; level::Real=0.05)
+    q = quantile(Normal(), 1 - level/2)
     return map(na.chaz, na.stderr) do srv, se
         srv - q * se, srv + q * se
     end
