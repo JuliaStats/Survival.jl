@@ -238,6 +238,19 @@ x7   0.0914971  0.0286485   3.19378     0.0014
          0.0914971  0.0286485   3.19378   0.0014
     ]
 
+    # Results generated from R 4.2.0 using survival 3.2.13
+    # fit = coxph(Surv(week, arrest) ~ fin + age + race + wexp + mar + paro + prio, rossi)
+    # confint(fit) 
+    expected_wald_intervals = [
+        -0.75451906 -0.004325277; 
+        -0.10055591 -0.014319573;
+        -0.28975496  0.917554537;
+        -0.56574767  0.266156280;
+        -1.18215152  0.314743762;
+        -0.46854711  0.298804944;
+         0.03534695  0.147647207
+    ]
+
     @test coef(outcome_from_matrix) ≈ coef(outcome) atol=1e-5
     @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix32) atol=1e-4
     @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix_int) atol=1e-5
@@ -249,6 +262,7 @@ x7   0.0914971  0.0286485   3.19378     0.0014
     @test outcome.model.fischer_info * vcov(outcome) ≈ I atol=1e-10
     @test norm(outcome.model.score) < 1e-5
     @test hcat(outcome_coefmat.cols[1:3]...) ≈ expected_coefs[:,1:3] atol=1e-5
+    @test confint(outcome_from_matrix) ≈ expected_wald_intervals atol=1e-6
 
     outcome_fin = coxph(@formula(event ~ fin), rossi; tol=1e-8)
     @test coeftable(outcome_fin).rownms == ["fin"]

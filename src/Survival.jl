@@ -29,7 +29,8 @@ export
     dof,
     dof_residual,
     vcov,
-    stderror
+    stderror,
+    confint
 
 
 abstract type AbstractEstimator end

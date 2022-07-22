@@ -123,6 +123,15 @@ StatsAPI.vcov(obj::CoxModel) = obj.vcov
 
 StatsAPI.stderror(obj::CoxModel) = sqrt.(diag(vcov(obj)))
 
+function StatsAPI.confint(obj::CoxModel; level::Real=0.95)
+    β = coef(obj)
+    se = stderror(obj)
+    q = quantile(Normal(), (1 - level) / 2)
+    ci_upr = β .- se .* q
+    ci_lwr = β .+ se .* q
+    return hcat(ci_lwr, ci_upr)
+end
+
 #compute negative loglikelihood
 
 function _cox_f(β, c::CoxAux{T})::T where T
