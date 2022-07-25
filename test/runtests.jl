@@ -283,7 +283,10 @@ x7   0.0914971  0.0286485   3.19378     0.0014
 end
 
 @testset "EventTable" begin
-    et = EventTable([4, 1, 3, 1, 5, 2, 3, 4], [0, 0, 1, 0, 0, 1, 0, 0])
+    t = [4, 1, 3, 1, 5, 2, 3, 4]
+    s = [0, 0, 1, 0, 0, 1, 0, 0]
+    et = EventTable(t, s)
+    @test et == EventTable(map(EventTime, t, s))
     @test Tables.istable(et)
     @test Tables.columnaccess(et)
     @test Tables.schema(et) isa Tables.Schema{(:time, :nevents, :ncensored, :natrisk),NTuple{4,Int}}
@@ -302,4 +305,6 @@ end
     end
     @test_throws DimensionMismatch EventTable(1:10, false:true)
     @test EventTable(Float32[], Int[]) == EventTable{Float32}(Float32[], Int[], Int[], Int[])
+    witht0 = vcat(EventTime(0), map(EventTime, t, s))
+    @test !any(iszero, EventTable(witht0).time)
 end
