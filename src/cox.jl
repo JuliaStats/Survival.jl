@@ -240,6 +240,9 @@ Cox proportional hazard model estimate of coefficients. Returns a `CoxModel`
 object.
 """
 function StatsAPI.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; tol=1e-4, l2_cost=0)
+    if rank(M) < min(size(M)...)
+        throw(ArgumentError("model matrix is not full rank; some terms may be collinear"))
+    end
     index_perm = sortperm(y)
     X = M[index_perm,:]
     s = y[index_perm]

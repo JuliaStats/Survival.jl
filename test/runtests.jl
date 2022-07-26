@@ -280,6 +280,10 @@ x7   0.0914971  0.0286485   3.19378     0.0014
     outcome_fincatracecat = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
     @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol=1e-8
+
+    transform!(rossi, :age => ByRow(age -> 2 * age) => :age_times_two)
+    @test_throws ArgumentError fit(CoxModel, @formula(event ~ fin + age + age_times_two),
+                                   rossi; tol=1e-8)
 end
 
 @testset "EventTable" begin
