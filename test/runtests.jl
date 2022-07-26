@@ -7,6 +7,7 @@ using Distributions
 using LinearAlgebra
 using StatsBase
 using StatsModels
+using Tables
 
 @testset "Event times" begin
     @test isevent(EventTime{Int}(44, true))
@@ -128,10 +129,10 @@ end
     @test length(jl_surv) == length(r_surv)
     @test jl_surv ≈ r_surv atol=1e-6
 
-    @test km.times == sort!(unique(t))
-    @test km.natrisk == r_risk
-    @test km.nevents == [sum(s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
-    @test km.ncensor == [sum(iszero, s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
+    @test km.events.time == sort!(unique(t))
+    @test km.events.natrisk == r_risk
+    @test km.events.nevents == [sum(s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
+    @test km.events.ncensored == [sum(iszero, s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
     @test km.stderr ≈ r_stderr atol=1e-6
 
     conf = confint(km)
@@ -145,9 +146,13 @@ end
     @test_throws ArgumentError fit(KaplanMeier, Float64[], Bool[])
 
     km_et = fit(KaplanMeier, EventTime.(t, Bool.(s)))
-    @test all(f->getfield(km, f) ≈ getfield(km_et, f), fieldnames(KaplanMeier))
+    @test km.events == km_et.events
+    @test km.survival ≈ km_et.survival
+    @test km.stderr ≈ km_et.stderr
 
     @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
+
+    @test_deprecated confint(km, 0.05)
 end
 
 @testset "Nelson-Aalen" begin
@@ -169,20 +174,19 @@ end
     na = fit(NelsonAalen, t, s)
     km = fit(KaplanMeier, t, s)
 
-    @test na.times == km.times
-    @test na.nevents == km.nevents
-    @test na.ncensor == km.ncensor
-    @test na.natrisk == km.natrisk
+    @test na.events == km.events
     @test exp.(-na.chaz[1:50]) ≈ km.survival[1:50] rtol=1e-2
     @test na.stderr[1:50] ≈ km.stderr[1:50] rtol=2e-2
     na_conf = confint(na)
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
     @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.025, length(na.chaz)) rtol=1e-8
     @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.975, length(na.chaz)) rtol=1e-8
-    na_conf = confint(na, 0.01)
+    na_conf = confint(na; level=0.01)
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
     @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.005, length(na.chaz)) rtol=1e-8
     @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.995, length(na.chaz)) rtol=1e-8
+
+    @test_deprecated confint(na, 0.05)
 end
 
 
@@ -234,6 +238,19 @@ x7   0.0914971  0.0286485   3.19378     0.0014
          0.0914971  0.0286485   3.19378   0.0014
     ]
 
+    # Results generated from R 4.2.0 using survival 3.2.13
+    # fit = coxph(Surv(week, arrest) ~ fin + age + race + wexp + mar + paro + prio, rossi)
+    # confint(fit) 
+    expected_wald_intervals = [
+        -0.75451906 -0.004325277; 
+        -0.10055591 -0.014319573;
+        -0.28975496  0.917554537;
+        -0.56574767  0.266156280;
+        -1.18215152  0.314743762;
+        -0.46854711  0.298804944;
+         0.03534695  0.147647207
+    ]
+
     @test coef(outcome_from_matrix) ≈ coef(outcome) atol=1e-5
     @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix32) atol=1e-4
     @test coef(outcome_from_matrix) ≈ coef(outcome_from_matrix_int) atol=1e-5
@@ -246,6 +263,7 @@ x7   0.0914971  0.0286485   3.19378     0.0014
     @test fisher_info * vcov(outcome) ≈ I atol=1e-10
     @test norm(outcome.model.score) < 1e-5
     @test hcat(outcome_coefmat.cols[1:3]...) ≈ expected_coefs[:,1:3] atol=1e-5
+    @test confint(outcome_from_matrix) ≈ expected_wald_intervals atol=1e-6
 
     outcome_fin = coxph(@formula(event ~ fin), rossi; tol=1e-8)
     @test coeftable(outcome_fin).rownms == ["fin"]
@@ -262,4 +280,31 @@ x7   0.0914971  0.0286485   3.19378     0.0014
     outcome_fincatracecat = coxph(@formula(event ~ fin * race), rossi; tol=1e-8)
     @test coeftable(outcome_fincatracecat).rownms == ["fin: 1", "race: 1","fin: 1 & race: 1"]
     @test coef(outcome_fincatracecat) ≈ coef(outcome_finrace) atol=1e-8
+end
+
+@testset "EventTable" begin
+    t = [4, 1, 3, 1, 5, 2, 3, 4]
+    s = [0, 0, 1, 0, 0, 1, 0, 0]
+    et = EventTable(t, s)
+    @test et == EventTable(map(EventTime, t, s))
+    @test Tables.istable(et)
+    @test Tables.columnaccess(et)
+    @test Tables.schema(et) isa Tables.Schema{(:time, :nevents, :ncensored, :natrisk),NTuple{4,Int}}
+    @test collect(Tables.rows(et)) == [(; time=1, nevents=0, ncensored=2, natrisk=8),
+                                       (; time=2, nevents=1, ncensored=0, natrisk=6),
+                                       (; time=3, nevents=1, ncensored=1, natrisk=5),
+                                       (; time=4, nevents=0, ncensored=2, natrisk=3),
+                                       (; time=5, nevents=0, ncensored=1, natrisk=1)]
+    et2 = copy(et)
+    @test et == et2
+    @test et !== et2
+    @test all(1:4) do i
+        a = getfield(et, i)
+        b = getfield(et2, i)
+        return a == b && a !== b
+    end
+    @test_throws DimensionMismatch EventTable(1:10, false:true)
+    @test EventTable(Float32[], Int[]) == EventTable{Float32}(Float32[], Int[], Int[], Int[])
+    witht0 = vcat(EventTime(0), map(EventTime, t, s))
+    @test !any(iszero, EventTable(witht0).time)
 end

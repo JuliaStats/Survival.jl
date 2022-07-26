@@ -89,8 +89,9 @@ julia> coef(model)
   0.09152099594619753
 ```
 
-Similarly, the standard errors of the estimates are accessible with `stderror(model)`
-and the full variance-covariance matrix with `vcov(model)`.
+Similarly, the standard errors of the estimates are accessible with `stderror(model)`,
+the full variance-covariance matrix with `vcov(model)`, and the Wald confidence 
+intervals with `confint(model)`. 
 
 Other available functions include:
 - `loglikelihood`, the log likelihood of the fitted model

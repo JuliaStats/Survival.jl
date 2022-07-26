@@ -5,10 +5,8 @@ An immutable type containing survivor function estimates computed
 using the Kaplan-Meier method.
 The type has the following fields:
 
-* `times`: Distinct event times
-* `nevents`: Number of observed events at each time
-* `ncensor`: Number of right censored events at each time
-* `natrisk`: Size of the risk set at each time
+* `events`: An [`EventTable`](@ref) summarizing the times and events
+  used to comute the estimates
 * `survival`: Estimate of the survival probability at each time
 * `stderr`: Standard error of the log survivor function at each time
 
@@ -16,10 +14,7 @@ Use `fit(KaplanMeier, ...)` to compute the estimates and construct
 this type.
 """
 struct KaplanMeier{T<:Real} <: NonparametricEstimator
-    times::Vector{T}
-    nevents::Vector{Int}
-    ncensor::Vector{Int}
-    natrisk::Vector{Int}
+    events::EventTable{T}
     survival::Vector{Float64}
     stderr::Vector{Float64}
 end
@@ -31,13 +26,13 @@ estimator_update(::Type{KaplanMeier}, es, dᵢ, nᵢ) = es * (1 - dᵢ / nᵢ) #
 stderr_update(::Type{KaplanMeier}, gw, dᵢ, nᵢ) = gw + dᵢ / (nᵢ * (nᵢ - dᵢ)) # StdErr update rule
 
 """
-    confint(km::KaplanMeier, α=0.05)
+    confint(km::KaplanMeier; level=0.05)
 
 Compute the pointwise log-log transformed confidence intervals for the survivor
 function as a vector of tuples.
 """
-function StatsAPI.confint(km::KaplanMeier, α::Float64=0.05)
-    q = quantile(Normal(), 1 - α/2)
+function StatsAPI.confint(km::KaplanMeier; level::Real=0.05)
+    q = quantile(Normal(), 1 - level/2)
     return map(km.survival, km.stderr) do srv, se
         l = log(-log(srv))
         a = q * se / log(srv)
