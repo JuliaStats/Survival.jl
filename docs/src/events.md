@@ -16,3 +16,16 @@ A dedicated type is provided to conveniently store right censored data.
 ```@docs
 Survival.EventTime
 ```
+
+## Summarizing Event Times
+
+Given times to an event of interest and indications of whether the observations are
+right censored, we can construct a table of the unique times along with the number of
+events of interest, the number of censored observations, and the size of the risk set
+at each time.
+This information is used for computing other estimates, e.g. of the survivor and
+cumulative hazard functions.
+
+```@docs
+Survival.EventTable
+```
