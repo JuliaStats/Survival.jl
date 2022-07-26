@@ -5,20 +5,15 @@ An immutable type containing cumulative hazard function estimates computed
 using the Nelson-Aalen method.
 The type has the following fields:
 
-* `times`: Distinct event times
-* `nevents`: Number of observed events at each time
-* `ncensor`: Number of right censored events at each time
-* `natrisk`: Size of the risk set at each time
+* `events`: An [`EventTable`](@ref) summarizing the times and events
+  used to comute the estimates
 * `chaz`: Estimate of the cumulative hazard at each time
 * `stderr`: Standard error of the cumulative hazard
 Use `fit(NelsonAalen, ...)` to compute the estimates and construct
 this type.
 """
 struct NelsonAalen{T<:Real} <: NonparametricEstimator
-    times::Vector{T}
-    nevents::Vector{Int}
-    ncensor::Vector{Int}
-    natrisk::Vector{Int}
+    events::EventTable{T}
     chaz::Vector{Float64}
     stderr::Vector{Float64}
 end

@@ -129,10 +129,10 @@ end
     @test length(jl_surv) == length(r_surv)
     @test jl_surv ≈ r_surv atol=1e-6
 
-    @test km.times == sort!(unique(t))
-    @test km.natrisk == r_risk
-    @test km.nevents == [sum(s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
-    @test km.ncensor == [sum(iszero, s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
+    @test km.events.time == sort!(unique(t))
+    @test km.events.natrisk == r_risk
+    @test km.events.nevents == [sum(s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
+    @test km.events.ncensored == [sum(iszero, s[t .== tᵢ]) for tᵢ in sort!(unique(t))]
     @test km.stderr ≈ r_stderr atol=1e-6
 
     conf = confint(km)
@@ -146,7 +146,9 @@ end
     @test_throws ArgumentError fit(KaplanMeier, Float64[], Bool[])
 
     km_et = fit(KaplanMeier, EventTime.(t, Bool.(s)))
-    @test all(f->getfield(km, f) ≈ getfield(km_et, f), fieldnames(KaplanMeier))
+    @test km.events == km_et.events
+    @test km.survival ≈ km_et.survival
+    @test km.stderr ≈ km_et.stderr
 
     @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
 
@@ -172,10 +174,7 @@ end
     na = fit(NelsonAalen, t, s)
     km = fit(KaplanMeier, t, s)
 
-    @test na.times == km.times
-    @test na.nevents == km.nevents
-    @test na.ncensor == km.ncensor
-    @test na.natrisk == km.natrisk
+    @test na.events == km.events
     @test exp.(-na.chaz[1:50]) ≈ km.survival[1:50] rtol=1e-2
     @test na.stderr[1:50] ≈ km.stderr[1:50] rtol=2e-2
     na_conf = confint(na)
