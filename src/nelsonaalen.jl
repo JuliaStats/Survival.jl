@@ -12,7 +12,7 @@ The type has the following fields:
 Use `fit(NelsonAalen, ...)` to compute the estimates and construct
 this type.
 """
-struct NelsonAalen{T<:Real} <: NonparametricEstimator
+struct NelsonAalen{T} <: NonparametricEstimator
     events::EventTable{T}
     chaz::Vector{Float64}
     stderr::Vector{Float64}

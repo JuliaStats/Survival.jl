@@ -13,7 +13,7 @@ The type has the following fields:
 Use `fit(KaplanMeier, ...)` to compute the estimates and construct
 this type.
 """
-struct KaplanMeier{T<:Real} <: NonparametricEstimator
+struct KaplanMeier{T} <: NonparametricEstimator
     events::EventTable{T}
     survival::Vector{Float64}
     stderr::Vector{Float64}

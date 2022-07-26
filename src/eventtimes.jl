@@ -1,4 +1,6 @@
-#-- EventTime ---------------
+#####
+##### `EventTime`
+#####
 
 ## Type constructors
 
@@ -8,7 +10,7 @@
 Immutable object containing the real-valued time to an event as well as an indicator of
 whether the time corresponds to an observed event (`true`) or right censoring (`false`).
 """
-struct EventTime{T<:Real}
+struct EventTime{T}
     time::T
     status::Bool
 end
@@ -18,7 +20,12 @@ EventTime(time, status=true) = EventTime{typeof(time)}(time, Bool(status))
 ## Overloaded Base functions
 
 Base.eltype(::Type{EventTime{T}}) where {T} = T
-Base.show(io::IO, ev::EventTime) = print(io, ev.time, ifelse(ev.status, "", "+"))
+
+function Base.show(io::IO, ev::EventTime)
+    show(io, ev.time)
+    iscensored(ev) && print(io, '+')
+    return nothing
+end
 
 Base.convert(T::Type{<:Real}, ev::EventTime) = convert(T, ev.time)
 Base.convert(T::Type{EventTime}, x::Real) = EventTime(x)

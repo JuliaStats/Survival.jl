@@ -2,6 +2,7 @@ using Survival
 using Test
 using CSV
 using DataFrames
+using Dates
 using CategoricalArrays
 using Distributions
 using LinearAlgebra
@@ -33,6 +34,8 @@ using Tables
     let x = [EventTime(2, false), EventTime(1), EventTime(2)]
         @test sort(x) == [EventTime(1), EventTime(2), EventTime(2, false)]
     end
+
+    @test isevent(EventTime(Day(420)))
 end
 
 @testset "Kaplan-Meier" begin
@@ -306,4 +309,7 @@ end
     @test EventTable(Float32[], Int[]) == EventTable{Float32}(Float32[], Int[], Int[], Int[])
     witht0 = vcat(EventTime(0), map(EventTime, t, s))
     @test !any(iszero, EventTable(witht0).time)
+    dates = EventTable(Year.(t), s)
+    @test all(x -> getfield(et, x) == getfield(dates, x), (:nevents, :ncensored, :natrisk))
+    @test et.time == Dates.value.(dates.time)
 end
