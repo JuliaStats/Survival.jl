@@ -205,7 +205,7 @@ end
     @test modelmatrix(outcome) == modelmatrix(outcome_without_formula)
 
     @test sprint(show, outcome_without_formula) == """
-CoxModel{Float64, Cholesky{Float64, Matrix{Float64}}}
+CoxModel{Float64}
 
 Coefficients:
 ──────────────────────────────────────────────
@@ -258,9 +258,7 @@ x7   0.0914971  0.0286485   3.19378     0.0014
     @test dof(outcome) == 7
     @test dof_residual(outcome) == 425
     @test loglikelihood(outcome) > nullloglikelihood(outcome)
-    fisher_info = Matrix(outcome.model.chol)
-    @test all(x->x > 0, eigen(fisher_info).values)
-    @test fisher_info * vcov(outcome) ≈ I atol=1e-10
+    @test isposdef(vcov(outcome))
     @test norm(outcome.model.score) < 1e-5
     @test hcat(outcome_coefmat.cols[1:3]...) ≈ expected_coefs[:,1:3] atol=1e-5
     @test confint(outcome_from_matrix) ≈ expected_wald_intervals atol=1e-6

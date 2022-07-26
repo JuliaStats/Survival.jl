@@ -78,12 +78,12 @@ end
 
 # Structure of Cox regression output
 
-struct CoxModel{T<:Real,C<:Union{Cholesky{T},CholeskyPivoted{T}}} <: RegressionModel
+struct CoxModel{T<:Real} <: RegressionModel
     aux::CoxAux{T}
     β::Vector{T}
     loglik::T
     score::Vector{T}
-    chol::C
+    vcov::Symmetric{T,Matrix{T}}
 end
 
 function StatsAPI.coeftable(obj::CoxModel)
@@ -118,7 +118,7 @@ StatsAPI.dof(obj::CoxModel) = length(coef(obj))
 
 StatsAPI.dof_residual(obj::CoxModel) = nobs(obj) - dof(obj)
 
-StatsAPI.vcov(obj::CoxModel) = inv(obj.chol)
+StatsAPI.vcov(obj::CoxModel) = obj.vcov
 
 StatsAPI.stderror(obj::CoxModel) = sqrt.(diag(vcov(obj)))
 
@@ -201,19 +201,6 @@ function _cox_fgh!(β, grad, hes, c::CoxAux{T}) where T
     return y
 end
 
-function _chol_me_maybe(A)
-    C = cholesky(A; check=false)
-    if issuccess(C)
-        return C
-    else
-        @static if VERSION >= v"1.8.0-DEV.1139"
-            return cholesky(A, RowMaximum())
-        else
-            return cholesky(A, Val(true))
-        end
-    end
-end
-
 _coxph(X::AbstractArray{<:Integer}, s::AbstractVector; tol, l2_cost) = _coxph(float(X), s; tol=tol, l2_cost=l2_cost)
 
 function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
@@ -225,9 +212,10 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
     β = Optim.minimizer(res)
     neg_ll = minimum(res)
     grad = Optim.gradient(fgh!)
-    hes = Symmetric(Optim.hessian(fgh!))
-    chol = _chol_me_maybe(hes)
-    return CoxModel{R,typeof(chol)}(c, β, -neg_ll, -grad, chol)
+    hes = Optim.hessian(fgh!)
+    chol = cholesky!(Symmetric(hes))
+    vcov = Symmetric(LAPACK.potri!(chol.uplo, chol.factors), Symbol(chol.uplo))
+    return CoxModel{R}(c, β, -neg_ll, -grad, vcov)
 end
 
 StatsModels.drop_intercept(::Type{CoxModel}) = true
