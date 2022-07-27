@@ -2,23 +2,25 @@
 ##### `fit` for non-parametric estimators
 #####
 
-function StatsAPI.fit(::Type{S}, et::EventTable) where {S<:NonparametricEstimator}
+function StatsAPI.fit(::Type{E}, et::EventTable) where {E<:NonparametricEstimator}
     outlen = length(et.time)
-    outlen == 0 && throw(ArgumentError("can't fit `$(nameof(S))` on 0 observations"))
-    estimator = Vector{Float64}(undef, outlen)
-    stderror = Vector{Float64}(undef, outlen)
-    es = estimator_start(S)
-    gw = stderr_start(S)
+    outlen == 0 && throw(ArgumentError("can't fit `$(nameof(E))` on 0 observations"))
+    T = eltype(et.time)
+    S = estimator_eltype(E)
+    estimator = Vector{S}(undef, outlen)
+    stderror = Vector{S}(undef, outlen)
+    es = estimator_start(E)
+    gw = stderr_start(E)
     @inbounds for i in 1:outlen
         dᵢ = et.nevents[i]
         nᵢ = et.natrisk[i]
-        es = estimator_update(S, es, dᵢ, nᵢ)
-        gw = stderr_update(S, gw, dᵢ, nᵢ)
+        es = estimator_update(E, es, dᵢ, nᵢ)
+        gw = stderr_update(E, gw, dᵢ, nᵢ)
         estimator[i] = es
         stderror[i] = sqrt(gw)
     end
-    return S{eltype(et.time)}(et, estimator, stderror)
+    return Core.apply_type(Base.typename(E).wrapper, S, T)(et, estimator, stderror)
 end
 
-StatsAPI.fit(::Type{S}, args...) where {S<:NonparametricEstimator} =
-    fit(S, EventTable(args...))
+StatsAPI.fit(::Type{E}, args...) where {E<:NonparametricEstimator} =
+    fit(E, EventTable(args...))

@@ -153,6 +153,13 @@ end
     @test km.survival ≈ km_et.survival
     @test km.stderr ≈ km_et.stderr
 
+    km_f32 = fit(KaplanMeier{Float32}, t, s)
+    @test km.events == km_f32.events
+    @test eltype(km_f32.survival) === Float32
+    @test eltype(km_f32.stderr) === Float32
+    @test km.survival ≈ km_f32.survival
+    @test km.stderr ≈ km_f32.stderr
+
     @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
 
     @test_deprecated confint(km, 0.05)
@@ -188,6 +195,13 @@ end
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
     @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.005, length(na.chaz)) rtol=1e-8
     @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.995, length(na.chaz)) rtol=1e-8
+
+    na_f32 = fit(NelsonAalen{Float32}, t, s)
+    @test na.events == na_f32.events
+    @test eltype(na_f32.chaz) === Float32
+    @test eltype(na_f32.stderr) === Float32
+    @test na.chaz ≈ na_f32.chaz
+    @test na.stderr ≈ na_f32.stderr
 
     @test_deprecated confint(na, 0.05)
 end
