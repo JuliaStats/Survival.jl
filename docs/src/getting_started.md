@@ -22,7 +22,7 @@ and [DataFrames](https://github.com/JuliaData/DataFrames.jl) packages.
 ```julia-repl
 julia> using Survival, StatsModels, CSV, DataFrames
 
-julia> rossi = CSV.read(joinpath(pkgdir(Survival), "test", "data", "rossi.csv")), DataFrame);
+julia> rossi = CSV.read(joinpath(pkgdir(Survival), "test", "data", "rossi.csv"), DataFrame);
 ```
 
 ### Fitting the model
