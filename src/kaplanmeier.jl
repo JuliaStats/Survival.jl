@@ -16,11 +16,30 @@ Use `fit(KaplanMeier, ...)` to compute the estimates as `Float64`
 values and construct this type.
 Alternatively, `fit(KaplanMeier{S}, ...)` may be used to request a
 particular value type `S` for the estimates.
+
+To computes the survival estimation at time `t` of a KaplanMeier fit you can use.
+
+```julia
+km = fit(KaplanMeier, ...)
+t = 5
+km(t) # evaluates the estimator at time 5
+```
 """
 struct KaplanMeier{S,T} <: NonparametricEstimator
     events::EventTable{T}
     survival::Vector{S}
     stderr::Vector{S}
+end
+
+function (km::KaplanMeier)(t::Real)
+    time_points = km.events.time
+    survival = km.survival
+    if t < time_points[1]
+        return estimator_start(typeof(km))
+    else
+        id = findlast(x -> x <= t, time_points) 
+        return survival[id]
+    end
 end
 
 estimator_eltype(::Type{<:KaplanMeier{S}}) where {S} = S

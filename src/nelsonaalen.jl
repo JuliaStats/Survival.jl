@@ -16,11 +16,30 @@ Use `fit(NelsonAalen, ...)` to compute the estimates as `Float64` values
 and construct this type.
 Alternatively, `fit(NelsonAalen{S}, ...)` may be used to request a
 particular value type `S` for the estimates.
+
+To computes the cumulative hazard estimation at time `t` of a NelsonAalen fit you can use.
+
+```julia
+na = fit(NelsonAalen, ...)
+t = 5
+na(t) # evaluates the estimator at time 5
+```
 """
 struct NelsonAalen{S,T} <: NonparametricEstimator
     events::EventTable{T}
     chaz::Vector{S}
     stderr::Vector{S}
+end
+
+function (na::NelsonAalen)(t::Real)
+    time_points = na.events.time
+    cumulative_hazard = na.chaz
+    if t < time_points[1]
+        return estimator_start(typeof(na))
+    else
+        id = findlast(x -> x <= t, time_points) 
+        return cumulative_hazard[id]
+    end
 end
 
 estimator_eltype(::Type{<:NelsonAalen{S}}) where {S} = S
