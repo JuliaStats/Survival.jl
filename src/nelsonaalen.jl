@@ -40,8 +40,9 @@ function as a vector of tuples.
 """
 function StatsAPI.confint(na::NelsonAalen; level::Real=0.05)
     q = quantile(Normal(), 1 - level/2)
-    return map(na.chaz, na.stderr) do srv, se
-        srv - q * se, srv + q * se
+    return map(na.chaz, na.stderr) do ch, se
+        a = q * se
+        return (ch - a, ch + a)
     end
 end
 
