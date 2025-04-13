@@ -24,6 +24,7 @@ using Greenwood's formula:
 
 ```@docs
 Survival.KaplanMeier
+Survival.KaplanMeier(t::Real)
 StatsAPI.fit(::Type{KaplanMeier}, ::Any, ::Any)
 StatsAPI.confint(::KaplanMeier)
 ```

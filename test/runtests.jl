@@ -163,6 +163,14 @@ end
     @test_throws ArgumentError fit(KaplanMeier, EventTime{Int}[])
 
     @test_deprecated confint(km, 0.05)
+
+    event_times = km.events.time
+    @test km.(event_times) == km.survival
+    # check that times between events have the right value
+    between_events = [(event_times[i] + event_times[i+1]) / 2 for i in 1:(length(event_times)-1)]
+    @test km(0) == 1
+    @test km.(between_events) == km.survival[1:end-1]
+    @test km(event_times[end] + 1) == km.survival[end]
 end
 
 @testset "Nelson-Aalen" begin
@@ -204,6 +212,16 @@ end
     @test na.stderr ≈ na_f32.stderr
 
     @test_deprecated confint(na, 0.05)
+
+
+    event_times = na.events.time
+    @test na.(event_times) == na.chaz
+    # check that times between events have the right value
+    between_events = [(event_times[i] + event_times[i+1]) / 2 for i in 1:(length(event_times)-1)]
+    @test na(0) == 0
+    @test na.(between_events) == na.chaz[1:end-1]
+    @test na(event_times[end] + 1) == na.chaz[end]
+
 end
 
 

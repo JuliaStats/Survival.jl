@@ -24,6 +24,7 @@ from ``n_i`` samples:
 
 ```@docs
 Survival.NelsonAalen
+Survival.NelsonAalen(t::Real)
 StatsAPI.fit(::Type{NelsonAalen}, ::Any, ::Any)
 StatsAPI.confint(::NelsonAalen)
 ```
