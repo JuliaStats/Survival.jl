@@ -83,8 +83,7 @@ struct CoxModel{T<:Real} <: RegressionModel
     β::Vector{T}
     loglik::T
     score::Vector{T}
-    fischer_info::Matrix{T}
-    vcov::Matrix{T}
+    vcov::Symmetric{T,Matrix{T}}
 end
 
 function StatsAPI.coeftable(obj::CoxModel)
@@ -210,8 +209,13 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
     β₀ = zeros(R, size(X, 2))
     fgh! = TwiceDifferentiable(Optim.only_fgh!((f, G, H, x)->_cox_fgh!(x, G, H, c)), β₀)
     res = optimize(fgh!, β₀, NewtonTrustRegion(), Optim.Options(g_tol = tol))
-    β, neg_ll, grad, hes = Optim.minimizer(res), Optim.minimum(res), Optim.gradient(fgh!), Optim.hessian(fgh!)
-    return CoxModel{R}(c, β, -neg_ll, -grad, hes, pinv(hes))
+    β = Optim.minimizer(res)
+    neg_ll = minimum(res)
+    grad = Optim.gradient(fgh!)
+    hes = Optim.hessian(fgh!)
+    chol = cholesky!(Symmetric(hes))
+    vcov = Symmetric(LAPACK.potri!(chol.uplo, chol.factors), Symbol(chol.uplo))
+    return CoxModel{R}(c, β, -neg_ll, -grad, vcov)
 end
 
 StatsModels.drop_intercept(::Type{CoxModel}) = true
@@ -224,6 +228,9 @@ Cox proportional hazard model estimate of coefficients. Returns a `CoxModel`
 object.
 """
 function StatsAPI.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; tol=1e-4, l2_cost=0)
+    if rank(M) < min(size(M)...)
+        throw(ArgumentError("model matrix is not full rank; some terms may be collinear"))
+    end
     index_perm = sortperm(y)
     X = M[index_perm,:]
     s = y[index_perm]
