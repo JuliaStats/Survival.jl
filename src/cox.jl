@@ -215,7 +215,7 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
     res = Optim.optimize(fgh!, β₀, optim_alg, optim_options, optim_state)
     rescode = Optim.termination_code(res)
     if rescode != Optim.TerminationCode.GradientNorm
-        error("Calculation of estimates of Cox proportional hazard model failed: Gradient norm ($(Optim.g_residual(res))) of estimate does not satisfy the specified tolerance ($(g_tol)).")
+        error(LazyString("Calculation of estimate of Cox proportional hazard model failed: Gradient norm (", Optim.g_residual(res), ") of estimate does not satisfy the specified tolerance (", tol, ")."))
     end
     β = Optim.minimizer(res)
     @assert β == optim_state.x
