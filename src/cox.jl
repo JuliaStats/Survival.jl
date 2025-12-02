@@ -208,14 +208,14 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
     R = promote_nonmissing(T)
     c = CoxAux(X, s, l2_cost)
     β₀ = zeros(R, size(X, 2))
-    fgh! = TwiceDifferentiable(Optim.only_fgh!((f, G, H, x)->_cox_fgh!(x, G, H, c)), β₀)
-    optim_alg = NewtonTrustRegion()
+    fgh! = NLSolversBase.TwiceDifferentiable(NLSolversBase.only_fgh!((f, G, H, x)->_cox_fgh!(x, G, H, c)), β₀)
+    optim_alg = Optim.NewtonTrustRegion()
     optim_options = Optim.Options(; g_abstol = tol)
     optim_state = Optim.initial_state(optim_alg, optim_options, fgh!, β₀)
-    res = optimize(fgh!, β₀, optim_options, optim_state)
+    res = Optim.optimize(fgh!, β₀, optim_options, optim_state)
     rescode = Optim.termination_code(res)
     if rescode != Optim.TerminationCode.GradientNorm
-        error("Computation of estimates of Cox proportional hazard model failed: Gradient norm ($(Optim.g_residual(res))) of estimate does not satisfy the specified tolerance ($(g_tol)).")
+        error("Calculation of estimates of Cox proportional hazard model failed: Gradient norm ($(Optim.g_residual(res))) of estimate does not satisfy the specified tolerance ($(g_tol)).")
     end
     β = Optim.minimizer(res)
     @assert β == optim_state.x
