@@ -1,6 +1,6 @@
 name = "Survival"
 uuid = "8a913413-2070-5976-9d4c-2b364fdc2f7f"
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
@@ -17,12 +17,12 @@ CategoricalArrays = "0.9, 0.10"
 Compat = "3.43, 4"
 DataFrames = "1"
 Distributions = "0.20, 0.21, 0.22, 0.23, 0.24, 0.25"
-Optim = "1"
+Optim = "2"
 StatsAPI = "1"
 StatsBase = "0.30, 0.31, 0.32, 0.33, 0.34"
 StatsModels = "0.6, 0.7"
 Tables = "1"
-julia = "1.6"
+julia = "1.10"
 
 [extras]
 CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
@@ -33,3 +33,6 @@ Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
 test = ["CategoricalArrays", "CSV", "DataFrames", "Dates", "Test"]
+
+[sources]
+Optim = { url = "https://github.com/devmotion/Optim.jl.git", rev = "dmw/jvp" }
