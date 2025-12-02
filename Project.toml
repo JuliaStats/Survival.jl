@@ -5,7 +5,9 @@ version = "0.3.1"
 [deps]
 Compat = "34da2185-b29b-5c13-b0c7-acf172513d20"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+NLSolversBase = "d41bc354-129a-5804-8e4c-c37616107c6c"
 Optim = "429524aa-4258-5aef-a3af-852621145aeb"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
@@ -29,12 +31,10 @@ CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
 CategoricalArrays = "324d7699-5711-5eae-9e2f-1d82baa6b597"
 DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
-LineSearches = "d3d80556-e9d4-5f37-9878-2ab0fcc64255"
-NLSolversBase = "d41bc354-129a-5804-8e4c-c37616107c6c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [targets]
-test = ["CategoricalArrays", "CSV", "DataFrames", "Dates", "LineSearches", "NLSolversBase", "Test"]
+test = ["CategoricalArrays", "CSV", "DataFrames", "Dates", "Test"]
 
 [sources]
 LineSearches = { url = "https://github.com/devmotion/LineSearches.jl.git", rev = "dmw/jvp" }
