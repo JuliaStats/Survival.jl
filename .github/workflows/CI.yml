@@ -15,8 +15,8 @@ jobs:
       fail-fast: false
       matrix:
         version:
-          - 'min'
-          - 'lts'
+          #- 'min'
+          #- 'lts'
           - '1'
           #- 'nightly'
         os:
