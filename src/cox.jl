@@ -212,7 +212,7 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
     optim_alg = Optim.NewtonTrustRegion()
     optim_options = Optim.Options(; g_abstol = tol)
     optim_state = Optim.initial_state(optim_alg, optim_options, fgh!, β₀)
-    res = Optim.optimize(fgh!, β₀, optim_options, optim_state)
+    res = Optim.optimize(fgh!, β₀, optim_alg, optim_options, optim_state)
     rescode = Optim.termination_code(res)
     if rescode != Optim.TerminationCode.GradientNorm
         error("Calculation of estimates of Cox proportional hazard model failed: Gradient norm ($(Optim.g_residual(res))) of estimate does not satisfy the specified tolerance ($(g_tol)).")
