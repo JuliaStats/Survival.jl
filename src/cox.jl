@@ -214,6 +214,7 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
     optim_state = Optim.initial_state(optim_alg, optim_options, fgh!, β₀)
     res = Optim.optimize(fgh!, β₀, optim_alg, optim_options, optim_state)
     rescode = Optim.termination_code(res)
+    @show rescode
     if rescode != Optim.TerminationCode.GradientNorm && rescode != Optim.TerminationCode.NoXChange && rescode != Optim.TerminationCode.NoObjectiveChange
         error(LazyString("Calculation of estimate of Cox proportional hazard model failed: Optimization stopped with termination code `", rescode, "`."))
     end
