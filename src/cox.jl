@@ -208,9 +208,21 @@ function _coxph(X::AbstractArray{T}, s::AbstractVector; l2_cost, tol) where T
     R = promote_nonmissing(T)
     c = CoxAux(X, s, l2_cost)
     β₀ = zeros(R, size(X, 2))
-    fgh! = TwiceDifferentiable(Optim.only_fgh!((f, G, H, x)->_cox_fgh!(x, G, H, c)), β₀)
-    res = optimize(fgh!, β₀, NewtonTrustRegion(), Optim.Options(g_tol = tol))
-    β, neg_ll, grad, hes = Optim.minimizer(res), Optim.minimum(res), Optim.gradient(fgh!), Optim.hessian(fgh!)
+    fgh! = NLSolversBase.TwiceDifferentiable(NLSolversBase.only_fgh!((f, G, H, x)->_cox_fgh!(x, G, H, c)), β₀)
+    optim_alg = Optim.NewtonTrustRegion()
+    optim_options = Optim.Options(; g_tol = tol)
+    optim_state = Optim.initial_state(optim_alg, optim_options, fgh!, β₀)
+    res = Optim.optimize(fgh!, β₀, optim_alg, optim_options, optim_state)
+    rescode = Optim.termination_code(res)
+    if rescode != Optim.TerminationCode.GradientNorm && rescode != Optim.TerminationCode.NoXChange && rescode != Optim.TerminationCode.NoObjectiveChange
+        error(LazyString("Calculation of estimate of Cox proportional hazard model failed: Optimization stopped with termination code `", rescode, "`."))
+    end
+    β = Optim.minimizer(res)
+    @assert β == optim_state.x
+    neg_ll = Optim.minimum(res)
+    @assert neg_ll == optim_state.f_x
+    grad = optim_state.g_x
+    hes = optim_state.H_x
     return CoxModel{R}(c, β, -neg_ll, -grad, hes, pinv(hes))
 end
 
