@@ -221,7 +221,7 @@ end
 
     @test modelmatrix(outcome) == modelmatrix(outcome_without_formula)
 
-    @test sprint(show, outcome_without_formula) == """
+    @test repr("text/plain", outcome_without_formula) == """
 CoxModel{Float64}
 
 Coefficients:
