@@ -97,12 +97,12 @@ function StatsAPI.coeftable(obj::CoxModel)
               map(i->string("x", i), 1:length(β)), 4)
 end
 
-function Base.show(io::IO, model::CoxModel)
+function Base.show(io::IO, ::MIME"text/plain", model::CoxModel)
     ct = coeftable(model)
     println(io, typeof(model))
     println(io)
     println(io, "Coefficients:")
-    show(io, ct)
+    show(io, MIME"text/plain"(), ct)
 end
 
 StatsAPI.coef(obj::CoxModel) = obj.β
