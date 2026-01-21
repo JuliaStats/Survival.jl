@@ -41,9 +41,16 @@ function as a vector of tuples.
 function StatsAPI.confint(km::KaplanMeier; level::Real=0.05)
     q = quantile(Normal(), 1 - level/2)
     return map(km.survival, km.stderr) do srv, se
-        l = log(-log(srv))
+        # The direct implementation here would be
+        #   ℓ = log(-log(srv))
+        #   a = q * se / log(srv)
+        #   lower = exp(-exp(ℓ - a))
+        #   upper = exp(-exp(ℓ + a))
+        # However, this has some issues with numerical accuracy. An approximation to
+        # this quantity with improved accuracy is implemented here. The approximation
+        # was obtained via Herbie (https://herbie.uwplse.org/).
         a = q * se / log(srv)
-        exp(-exp(l - a)), exp(-exp(l + a))
+        return (srv^exp(-a), srv^exp(a))
     end
 end
 
