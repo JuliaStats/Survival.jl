@@ -38,8 +38,8 @@ stderr_update(::Type{<:KaplanMeier}, gw, dᵢ, nᵢ) = gw + dᵢ // (nᵢ * (n�
 Compute the pointwise log-log transformed confidence intervals for the survivor
 function as a vector of tuples.
 """
-function StatsAPI.confint(km::KaplanMeier; level::Real=0.05)
-    q = quantile(Normal(), 1 - level/2)
+function StatsAPI.confint(km::KaplanMeier; level::Real=0.95)
+    q = quantile(Normal(), (1 + level)/2)
     return map(km.survival, km.stderr) do srv, se
         l = log(-log(srv))
         a = q * se / log(srv)
