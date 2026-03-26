@@ -33,7 +33,7 @@ estimator_update(::Type{<:NelsonAalen}, es, dᵢ, nᵢ) = es + dᵢ // nᵢ
 stderr_update(::Type{<:NelsonAalen}, gw, dᵢ, nᵢ) = gw + dᵢ * (nᵢ - dᵢ) // (nᵢ^3)
 
 """
-    confint(na::NelsonAalen; level=0.05)
+    confint(na::NelsonAalen; level=0.95)
 
 Compute the pointwise confidence intervals for the cumulative hazard
 function as a vector of tuples.
