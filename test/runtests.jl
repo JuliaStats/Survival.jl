@@ -146,8 +146,8 @@ end
     @test jl_upper ≈ r_upper atol=1e-6
 
     conf_99 = confint(km; level=0.99)
-    @test all(getindex.(conf_99, 1) .<= getindex.(conf, 1))
-    @test all(getindex.(conf_99, 2) .>= getindex.(conf, 2))
+    @test all(first.(conf_99) .<= first.(conf))
+    @test all(last.(conf_99) .>= last.(conf))
 
     @test_throws DimensionMismatch fit(KaplanMeier, [1, 2], [true])
     @test_throws ArgumentError fit(KaplanMeier, Float64[], Bool[])
