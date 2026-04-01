@@ -17,4 +17,5 @@ makedocs(
 deploydocs(
     repo = "github.com/JuliaStats/Survival.jl.git",
     target = "build",
+    push_preview = true,
 )
