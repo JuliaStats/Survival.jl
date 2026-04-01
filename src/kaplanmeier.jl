@@ -23,6 +23,26 @@ struct KaplanMeier{S,T} <: NonparametricEstimator
     stderr::Vector{S}
 end
 
+"""
+To computes the survival estimation at time `t` of a KaplanMeier fit you can use.
+
+```julia
+km = fit(KaplanMeier, ...)
+t = 5
+km(t) # evaluates the estimator at time 5
+```
+"""
+function (km::KaplanMeier)(t::Real)
+    time_points = km.events.time
+    survival = km.survival
+    if t < time_points[1]
+        return estimator_start(typeof(km))
+    else
+        id = findlast(x -> x <= t, time_points) 
+        return survival[id]
+    end
+end
+
 estimator_eltype(::Type{<:KaplanMeier{S}}) where {S} = S
 estimator_eltype(::Type{KaplanMeier}) = Float64
 
