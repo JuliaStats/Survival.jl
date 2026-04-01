@@ -43,6 +43,7 @@ end
 
 Base.@kwdef struct KaplanMeierAnalysis
     interval::Union{Symbol,Nothing} = :confidence
+    level::Float64 = 0.95
 end
 
 function (a::KaplanMeierAnalysis)(input::ProcessedLayer)
@@ -53,7 +54,7 @@ function (a::KaplanMeierAnalysis)(input::ProcessedLayer)
     output = AlgebraOfGraphics.map(input) do p, n
         time, event = p
         km = fit(KaplanMeier, time, BitVector(event))
-        ci = confint(km)
+        ci = confint(km; level=a.level)
 
         t = [0.0; km.events.time]
         s = [1.0; km.survival]
@@ -118,7 +119,7 @@ function (a::KaplanMeierAnalysis)(input::ProcessedLayer)
 end
 
 """
-    kaplanmeier(; interval=:confidence)
+    kaplanmeier(; interval=:confidence, level=0.95)
 
 Compute a Kaplan-Meier survival estimate as an AlgebraOfGraphics transformation.
 
@@ -126,7 +127,8 @@ The first positional mapping should be time, the second the event indicator
 (0/1 or Bool).
 
 Use `interval=:confidence` (default) for confidence bands, or
-`interval=nothing` for just the survival curve.
+`interval=nothing` for just the survival curve. The `level` keyword
+controls the confidence level (default 0.95).
 
 Grouping (e.g. `color=:treatment`) is handled automatically by AlgebraOfGraphics.
 """

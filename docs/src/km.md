@@ -83,6 +83,15 @@ add_risktable!(fg)
 fg
 ```
 
+### Custom Confidence Level
+
+Use the `level` keyword to change the confidence level (default 0.95):
+
+```@example km
+plt = data(lung) * mapping("Time", "Event") * (kaplanmeier(level=0.9) + censorticks())
+draw(plt)
+```
+
 ### Without Confidence Interval
 
 Pass `interval=nothing` to show only the survival curve:
