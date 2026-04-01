@@ -110,7 +110,6 @@ StatsAPI.fit(::Type{KaplanMeier}, ::Any)
 StatsAPI.confint(::KaplanMeier)
 Survival.kaplanmeier
 Survival.censorticks
-Survival.risktable_at
 Survival.add_risktable!
 ```
 

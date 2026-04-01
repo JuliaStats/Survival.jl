@@ -6,7 +6,7 @@ using AlgebraOfGraphics
 using AlgebraOfGraphics: transformation, ProcessedLayer, ProcessedLayers, dictionary, verbatim
 using AlgebraOfGraphics.Makie: Makie, Stairs, Band, Scatter, Axis, to_value, text!, hidexdecorations!, linkxaxes!, ylims!
 
-import Survival: kaplanmeier, censorticks, risktable_at, add_risktable!
+import Survival: kaplanmeier, censorticks, add_risktable!
 
 # ── Helper: stepped band coordinates ────────────────────────────────────────
 
@@ -27,11 +27,7 @@ end
 
 # ── risktable_at ────────────────────────────────────────────────────────────
 
-"""
-    risktable_at(km::KaplanMeier, timepoints)
-
-Compute at-risk counts at specified time points from a KaplanMeier fit.
-"""
+# Compute at-risk counts at specified time points from a KaplanMeier fit.
 function risktable_at(km::KaplanMeier, timepoints)
     map(timepoints) do t
         idx = searchsortedfirst(km.events.time, t)
