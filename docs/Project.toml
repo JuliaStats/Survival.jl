@@ -1,11 +1,14 @@
 [deps]
+AlgebraOfGraphics = "cbdf2221-f076-402e-a563-3d30da359d67"
+CairoMakie = "13f3f980-e62b-5c42-98c6-ff1f3baf88f0"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+RDatasets = "ce6b1742-4840-55fa-b093-852dadbb1d8b"
 StatsAPI = "82ae8749-77ed-4fe6-ae5f-f523153014b0"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 Survival = "8a913413-2070-5976-9d4c-2b364fdc2f7f"
 
-[compat]
-Documenter = "~0.27"
-
 [sources]
-Survival = { path = ".." }
+Survival = {path = "/Users/andreasnoack/.julia/dev/Survival"}
+
+[compat]
+Documenter = "1"

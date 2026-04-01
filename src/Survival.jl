@@ -23,6 +23,11 @@ export
     fit,
     confint,
 
+    kaplanmeier,
+    censorticks,
+    risktable_at,
+    add_risktable!,
+
     CoxModel,
     coxph,
     coef,
@@ -45,6 +50,12 @@ include("estimator.jl")
 include("kaplanmeier.jl")
 include("nelsonaalen.jl")
 include("cox.jl")
+
+## AlgebraOfGraphics extension stubs (methods added by SurvivalAlgebraOfGraphicsExt)
+function kaplanmeier end
+function censorticks end
+function risktable_at end
+function add_risktable! end
 
 ## Deprecations
 

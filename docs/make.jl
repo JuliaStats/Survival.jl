@@ -1,7 +1,7 @@
-using Survival, Documenter, StatsBase, StatsAPI
+using Survival, Documenter, StatsBase, StatsAPI, AlgebraOfGraphics, CairoMakie, RDatasets
 
 makedocs(
-    modules = [Survival],
+    modules = [Survival, Base.get_extension(Survival, :SurvivalAlgebraOfGraphicsExt)::Module],
     sitename = "Survival.jl",
     authors = "Alex Arslan",
     pages = [
