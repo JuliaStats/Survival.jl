@@ -3,11 +3,13 @@ module Survival
 using Compat
 using Distributions
 using LinearAlgebra
-using Optim
 using StatsAPI
 using StatsBase
 using StatsModels
 using Tables
+
+using NLSolversBase: NLSolversBase
+using Optim: Optim
 
 export
     EventTime,

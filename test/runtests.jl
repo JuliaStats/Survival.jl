@@ -145,6 +145,10 @@ end
     @test jl_lower ≈ r_lower atol=1e-6
     @test jl_upper ≈ r_upper atol=1e-6
 
+    conf_99 = confint(km; level=0.99)
+    @test all(first.(conf_99) .<= first.(conf))
+    @test all(last.(conf_99) .>= last.(conf))
+
     @test_throws DimensionMismatch fit(KaplanMeier, [1, 2], [true])
     @test_throws ArgumentError fit(KaplanMeier, Float64[], Bool[])
 
@@ -191,10 +195,13 @@ end
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
     @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.025, length(na.chaz)) rtol=1e-8
     @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.975, length(na.chaz)) rtol=1e-8
-    na_conf = confint(na; level=0.01)
+    na_conf = confint(na; level=0.99)
     na_lower, na_upper = getindex.(na_conf, 1), getindex.(na_conf, 2)
     @test cdf.(Normal.(na.chaz, na.stderr), na_lower) ≈ fill(0.005, length(na.chaz)) rtol=1e-8
     @test cdf.(Normal.(na.chaz, na.stderr), na_upper) ≈ fill(0.995, length(na.chaz)) rtol=1e-8
+    na_conf_95 = confint(na; level=0.95)
+    @test all(first.(na_conf) .<= first.(na_conf_95))
+    @test all(last.(na_conf) .>= last.(na_conf_95))
 
     na_f32 = fit(NelsonAalen{Float32}, t, s)
     @test na.events == na_f32.events
@@ -221,7 +228,7 @@ end
 
     @test modelmatrix(outcome) == modelmatrix(outcome_without_formula)
 
-    @test sprint(show, outcome_without_formula) == """
+    @test repr("text/plain", outcome_without_formula) == """
 CoxModel{Float64}
 
 Coefficients:
