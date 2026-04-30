@@ -209,9 +209,7 @@ _rowtype(et::EventTable) = _rowtype(typeof(et))
 
 Tables.schema(et::EventTable) = Tables.Schema(_rowtype(et))
 
-function Tables.rows(et::EventTable)
-    NT = _rowtype(et)
-    nr = length(et.time)
-    nc = fieldcount(NT)
-    return (@inbounds(NT(ntuple(i -> getfield(et, i)[j], nc))) for j in 1:nr)
-end
+Tables.columns(et::EventTable) = et
+Tables.columnnames(::EventTable) = fieldnames(EventTable)
+Tables.getcolumn(et::EventTable, i::Int) = getfield(et, i)
+Tables.getcolumn(et::EventTable, nm::Symbol) = getfield(et, nm)

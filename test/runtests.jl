@@ -313,11 +313,21 @@ end
     @test Tables.istable(et)
     @test Tables.columnaccess(et)
     @test Tables.schema(et) isa Tables.Schema{(:time, :nevents, :ncensored, :natrisk),NTuple{4,Int}}
-    @test collect(Tables.rows(et)) == [(; time=1, nevents=0, ncensored=2, natrisk=8),
-                                       (; time=2, nevents=1, ncensored=0, natrisk=6),
-                                       (; time=3, nevents=1, ncensored=1, natrisk=5),
-                                       (; time=4, nevents=0, ncensored=2, natrisk=3),
-                                       (; time=5, nevents=0, ncensored=1, natrisk=1)]
+    @test Tables.rowtable(et) == [(; time=1, nevents=0, ncensored=2, natrisk=8),
+                                  (; time=2, nevents=1, ncensored=0, natrisk=6),
+                                  (; time=3, nevents=1, ncensored=1, natrisk=5),
+                                  (; time=4, nevents=0, ncensored=2, natrisk=3),
+                                  (; time=5, nevents=0, ncensored=1, natrisk=1)]
+    @test Tables.columnnames(et) == (:time, :nevents, :ncensored, :natrisk)
+    @test Tables.getcolumn(et, :time) === et.time
+    @test Tables.getcolumn(et, 2) === et.nevents
+    df = DataFrame(et)
+    @test names(df) == ["time", "nevents", "ncensored", "natrisk"]
+    @test nrow(df) == length(et.time)
+    @test df.time == et.time
+    @test df.nevents == et.nevents
+    @test df.ncensored == et.ncensored
+    @test df.natrisk == et.natrisk
     et2 = copy(et)
     @test et == et2
     @test et !== et2
