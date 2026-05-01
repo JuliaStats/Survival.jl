@@ -16,7 +16,10 @@ the vector of coefficients in the model.
 ## API
 
 ```@docs
-StatsAPI.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
+Survival.CoxModel
+Survival.coxph
+StatsAPI.fit(::Type{CoxModel}, ::AbstractMatrix, ::AbstractVector{<:Survival.EventTime})
+StatsAPI.confint(::CoxModel)
 ```
 
 ## References

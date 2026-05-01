@@ -78,6 +78,25 @@ end
 
 # Structure of Cox regression output
 
+"""
+    CoxModel{T<:Real} <: RegressionModel
+
+Result of fitting a Cox proportional hazards model via [`coxph`](@ref) or
+`fit(CoxModel, ...)`. Use `coef`, `stderror`, `vcov`, `confint`, `loglikelihood`,
+`nullloglikelihood`, `nobs`, `dof`, `dof_residual`, and `coeftable` to inspect the
+fitted model. The exposed fields are:
+
+* `β::Vector{T}`: estimated coefficient vector (the maximum partial-likelihood point
+  estimate, possibly with an L2 penalty — see `fit`).
+* `loglik::T`: maximized partial log-likelihood at `β`.
+* `score::Vector{T}`: gradient of the partial log-likelihood at `β`.
+* `fischer_info::Matrix{T}`: observed information matrix (Hessian of the negative
+  partial log-likelihood) at `β`.
+* `vcov::Matrix{T}`: estimated variance–covariance matrix of `β`, computed as the
+  pseudo-inverse of `fischer_info`.
+* `aux::CoxAux{T}`: internal workspace holding the design matrix, the sorted response,
+  and bookkeeping for tied event times. Not part of the public API.
+"""
 struct CoxModel{T<:Real} <: RegressionModel
     aux::CoxAux{T}
     β::Vector{T}
@@ -123,6 +142,13 @@ StatsAPI.vcov(obj::CoxModel) = obj.vcov
 
 StatsAPI.stderror(obj::CoxModel) = sqrt.(diag(vcov(obj)))
 
+"""
+    confint(obj::CoxModel; level::Real=0.95) -> Matrix{Float64}
+
+Compute the two-sided Wald confidence intervals for the coefficients of `obj` and return
+them as an `n × 2` matrix whose columns are the lower and upper bounds, in coefficient
+order. `level` is the nominal coverage of the interval (default 0.95).
+"""
 function StatsAPI.confint(obj::CoxModel; level::Real=0.95)
     β = coef(obj)
     se = stderror(obj)
@@ -229,17 +255,45 @@ end
 StatsModels.drop_intercept(::Type{CoxModel}) = true
 
 """
-    fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; kwargs...)
+    fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector{<:EventTime};
+        tol::Real=1e-4, l2_cost::Real=0) -> CoxModel
 
-Given a matrix `M` of predictors and a corresponding vector of events, compute the
-Cox proportional hazard model estimate of coefficients. Returns a `CoxModel`
-object.
+Fit a Cox proportional hazards model to the design matrix `M` (one row per observation,
+one column per covariate) and the response vector `y` of [`EventTime`](@ref) values.
+The rows of `M` and the entries of `y` must be in the same order; the model sorts them
+internally by `y` before optimization.
+
+The coefficient vector is estimated by maximizing the partial log-likelihood (Efron's
+approximation for tied event times) with a Newton trust-region method. Integer matrices
+are promoted to floating point. No intercept column is fit — the baseline hazard is
+unidentified in the partial likelihood.
+
+Keyword arguments:
+
+* `tol::Real=1e-4`: gradient-norm tolerance passed to the optimizer. Tighten this when
+  comparing against high-precision references.
+* `l2_cost::Real=0`: coefficient of an L2 (ridge) penalty `l2_cost * β'β` added to the
+  negative log-likelihood. The default is no penalization.
+
+Use [`coxph`](@ref) for the conventional shorthand or for the
+`@formula(event ~ ...)` interface via StatsModels.
 """
-function StatsAPI.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector; tol=1e-4, l2_cost=0)
+function StatsAPI.fit(::Type{CoxModel}, M::AbstractMatrix, y::AbstractVector{<:EventTime};
+                      tol::Real=1e-4, l2_cost::Real=0)
     index_perm = sortperm(y)
     X = M[index_perm,:]
     s = y[index_perm]
     _coxph(X, s; tol=tol, l2_cost=l2_cost)
 end
 
+"""
+    coxph(M::AbstractMatrix, y::AbstractVector{<:EventTime}; kwargs...) -> CoxModel
+    coxph(formula::FormulaTerm, data; kwargs...)
+
+Fit a Cox proportional hazards model. Equivalent to `fit(CoxModel, M, y; kwargs...)`
+when called with a design matrix and response vector, and to the corresponding
+StatsModels formula form when called with a `@formula` and a Tables.jl-compatible
+data source. See [`fit(::Type{CoxModel}, ::AbstractMatrix, ::AbstractVector)`](@ref)
+for accepted keyword arguments.
+"""
 coxph(M, y; kwargs...) = fit(CoxModel, M, y; kwargs...)
