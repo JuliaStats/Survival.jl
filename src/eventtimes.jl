@@ -5,10 +5,20 @@
 ## Type constructors
 
 """
-    EventTime{T}
+    EventTime{T}(time::T, status::Bool)
+    EventTime(time, status=true)
 
-Immutable object containing the real-valued time to an event as well as an indicator of
-whether the time corresponds to an observed event (`true`) or right censoring (`false`).
+Immutable object containing a time-to-event together with an indicator of whether the
+time corresponds to an observed event (`status=true`) or to right censoring
+(`status=false`). The single-argument form constructs an observed event.
+
+The type parameter `T` is the type of the time value. Any totally ordered type that
+supports `isless` and `zero` is accepted, including `Real` subtypes and `Dates.Period`
+subtypes.
+
+`isless` is defined so that, when two `EventTime`s share the same `time`, an observed
+event compares less than a censored one — by definition, the true event time of a
+censored observation is at least the recorded time.
 """
 struct EventTime{T}
     time::T
@@ -44,7 +54,19 @@ end
 
 ## New functions
 
+"""
+    isevent(ev::EventTime) -> Bool
+
+Return `true` if `ev` records an observed event and `false` if it is right censored.
+"""
 isevent(ev::EventTime) = ev.status
+
+"""
+    iscensored(ev::EventTime) -> Bool
+
+Return `true` if `ev` is right censored and `false` if it records an observed event.
+Equivalent to `!isevent(ev)`.
+"""
 iscensored(ev::EventTime) = !ev.status
 
 ## StatsModels compatibility
@@ -60,22 +82,24 @@ Base.copy(et::EventTime) = et
 
 """
     EventTable{T}
+    EventTable(eventtimes::AbstractVector{<:EventTime})
+    EventTable(time::AbstractVector, status::AbstractVector)
 
-Immutable object summarizing the unique observed event times, including the number of
-events, the number of censored observations, and the number remaining at risk for each
-unique time.
+Immutable summary of a set of observations, aggregated to one row per unique observed
+time. The fields are parallel vectors of length equal to the number of unique observed
+times:
 
-This type implements the Tables.jl interface for tables, which means that `EventTable`
-objects can be seamlessly converted to other tabular types such as `DataFrame`s.
+* `time::Vector{T}`: the unique observed times in ascending order.
+* `nevents::Vector{Int}`: the number of observed events at each time.
+* `ncensored::Vector{Int}`: the number of right-censored observations at each time.
+* `natrisk::Vector{Int}`: the size of the risk set just before each time, i.e. the
+  number of subjects whose recorded time is greater than or equal to that time.
 
-    EventTable(eventtimes)
+Observations with `time == zero(T)` are dropped because they contribute nothing to the
+risk set; the input does not need to be sorted.
 
-Construct an `EventTable` from an array of [`EventTime`](@ref) values.
-
-    EventTable(time, status)
-
-Construct an `EventTable` from an array of time values and an array of event status
-indicators.
+`EventTable` implements the Tables.jl column-access interface, so it can be converted to
+other tabular types (e.g. `DataFrame`) and iterated row by row via `Tables.rows`.
 """
 struct EventTable{T}
     time::Vector{T}
@@ -84,7 +108,7 @@ struct EventTable{T}
     natrisk::Vector{Int}
 end
 
-function EventTable(ets)
+function EventTable(ets::AbstractVector{<:EventTime})
     T = eltype(eltype(ets))
     isempty(ets) && return EventTable{T}(T[], Int[], Int[], Int[])
     ets = issorted(ets) ? ets : sort(ets)  # re-binding, input is unaffected
@@ -92,7 +116,7 @@ function EventTable(ets)
     return _eventtable(ets)
 end
 
-function EventTable(time, status)
+function EventTable(time::AbstractVector, status::AbstractVector)
     ntimes = length(time)
     nstatus = length(status)
     if ntimes != nstatus

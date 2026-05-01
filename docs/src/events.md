@@ -15,6 +15,8 @@ A dedicated type is provided to conveniently store right censored data.
 
 ```@docs
 Survival.EventTime
+Survival.isevent
+Survival.iscensored
 ```
 
 ## Summarizing Event Times
