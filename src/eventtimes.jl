@@ -88,7 +88,7 @@ function EventTable(ets)
     T = eltype(eltype(ets))
     isempty(ets) && return EventTable{T}(T[], Int[], Int[], Int[])
     ets = issorted(ets) ? ets : sort(ets)  # re-binding, input is unaffected
-    _droptimezero!(ets)
+    _checknotimezero(ets)
     return _eventtable(ets)
 end
 
@@ -103,18 +103,19 @@ function EventTable(time, status)
     ntimes == 0 && return EventTable{T}(T[], Int[], Int[], Int[])
     ets = map(EventTime, time, status)
     issorted(ets) || sort!(ets)
-    _droptimezero!(ets)
+    _checknotimezero(ets)
     return _eventtable(ets)
 end
 
-function _droptimezero!(ets)
+function _checknotimezero(ets)
     # Assumptions about the input:
-    #   - iterates `EventTime`s
     #   - sorted ascending by elements' `.time` fields
-    i = findfirst(et -> !iszero(et.time), ets)
-    start = firstindex(ets)
-    if i !== nothing && i > start
-        deleteat!(ets, start:(start + i - 1))
+    # Time 0 has no meaning for a right-censored survival observation: the risk
+    # set is undefined before time starts. Force the caller to decide how to
+    # handle these rows rather than silently dropping them.
+    if !isempty(ets) && iszero(first(ets).time)
+        throw(ArgumentError("event time of 0 is not allowed; filter or shift these " *
+                            "observations before constructing an `EventTable`"))
     end
     return ets
 end

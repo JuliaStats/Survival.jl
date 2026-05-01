@@ -328,9 +328,168 @@ end
     end
     @test_throws DimensionMismatch EventTable(1:10, false:true)
     @test EventTable(Float32[], Int[]) == EventTable{Float32}(Float32[], Int[], Int[], Int[])
-    witht0 = vcat(EventTime(0), map(EventTime, t, s))
-    @test !any(iszero, EventTable(witht0).time)
+    # `t = 0` has no risk-set interpretation, so constructing an `EventTable`
+    # from data containing such observations is an error rather than a silent drop.
+    @test_throws ArgumentError EventTable(vcat(EventTime(0), map(EventTime, t, s)))
+    @test_throws ArgumentError EventTable([0; t], [true; s])
+    @test_throws ArgumentError EventTable([0, 0, 1, 2, 3], [true, false, true, false, true])
     dates = EventTable(Year.(t), s)
     @test all(x -> getfield(et, x) == getfield(dates, x), (:nevents, :ncensored, :natrisk))
     @test et.time == Dates.value.(dates.time)
+end
+
+@testset "Rdatasets vs R survival" begin
+    # Data is pulled from https://github.com/vincentarelbundock/Rdatasets via
+    # `test/data/refs/download_data.jl`; R reference results are produced by
+    # `test/data/refs/generate_refs.R` from those same CSVs.
+    refdir = joinpath(@__DIR__, "data", "refs")
+    # `""` covers NA in the upstream Rdatasets CSVs; `"NA"` covers R's CSV writer
+    # output for the reference results.
+    read_csv(name) = CSV.read(joinpath(refdir, "$(name).csv"), DataFrame;
+                              missingstring = ["", "NA"])
+    load_data(name) = read_csv("$(name)_data")
+
+    function compare_km_na(name, times, status; atol_km = 1e-8, atol_chaz = 1e-7)
+        ref = read_csv("$(name)_km")
+        km = fit(KaplanMeier, times, status)
+        na = fit(NelsonAalen, times, status)
+
+        @test km.events.time == ref.time
+        @test km.events.natrisk == ref.n_risk
+        @test km.events.nevents == ref.n_event
+        @test km.events.ncensored == ref.n_censor
+
+        @test km.survival ≈ ref.surv atol = atol_km
+        # R reports `Inf` for std.err at the boundary where surv→0; skip those cells.
+        finite = isfinite.(ref.std_err) .& isfinite.(km.stderr)
+        @test km.stderr[finite] ≈ ref.std_err[finite] atol = atol_km
+
+        conf = confint(km)
+        lo = first.(conf); up = last.(conf)
+        # log-log CI is undefined when surv∈{0,1}; R writes NA, Survival.jl returns NaN.
+        valid = .!ismissing.(ref.lower) .& .!ismissing.(ref.upper) .&
+                isfinite.(lo) .& isfinite.(up)
+        @test lo[valid] ≈ ref.lower[valid] atol = atol_km
+        @test up[valid] ≈ ref.upper[valid] atol = atol_km
+
+        @test na.chaz ≈ ref.cumhaz atol = atol_chaz
+        @test na.stderr ≈ ref.chaz_se atol = atol_chaz
+        return km, na
+    end
+
+    function compare_cox(name, model; atol_coef = 1e-5, atol_ll = 1e-6)
+        ref = read_csv("$(name)_cox")
+        meta = read_csv("$(name)_cox_meta")
+        @test coef(model) ≈ ref.coef atol = atol_coef
+        @test stderror(model) ≈ ref.se atol = atol_coef
+        ci = confint(model)
+        @test ci[:, 1] ≈ ref.lo95 atol = atol_coef
+        @test ci[:, 2] ≈ ref.hi95 atol = atol_coef
+        @test loglikelihood(model) ≈ meta.loglik[1] atol = atol_ll
+        @test nullloglikelihood(model) ≈ meta.null_loglik[1] atol = atol_ll
+        @test nobs(model) == meta.n[1]
+    end
+
+    @testset "lung" begin
+        df = load_data("lung")
+        compare_km_na("lung", df.time, df.status .== 2)
+        cc = dropmissing(df, [:time, :status, :age, :sex, :ph_ecog, :ph_karno, :wt_loss])
+        cc[!, :event] = EventTime.(cc.time, cc.status .== 2)
+        m = coxph(@formula(event ~ age + sex + ph_ecog + ph_karno + wt_loss), cc; tol=1e-9)
+        compare_cox("lung", m)
+    end
+
+    @testset "leukemia" begin
+        df = load_data("leukemia")
+        compare_km_na("leukemia", df.time, df.status .== 1)
+        df[!, :event] = EventTime.(df.time, df.status .== 1)
+        m = coxph(@formula(event ~ x), df; tol=1e-9)
+        compare_cox("leukemia", m)
+    end
+
+    @testset "mgus" begin
+        df = load_data("mgus")
+        compare_km_na("mgus", df.futime, df.death .== 1)
+        cc = dropmissing(df, [:futime, :death, :age, :sex, :alb, :creat, :hgb, :mspike])
+        cc[!, :event] = EventTime.(cc.futime, cc.death .== 1)
+        m = coxph(@formula(event ~ age + sex + alb + creat + hgb + mspike), cc; tol=1e-9)
+        compare_cox("mgus", m)
+    end
+
+    @testset "nwtco" begin
+        df = load_data("nwtco")
+        compare_km_na("nwtco", df.edrel, df.rel .== 1)
+        df[!, :event] = EventTime.(df.edrel, df.rel .== 1)
+        df[!, :histol_f] = categorical(df.histol)
+        df[!, :stage_f]  = categorical(df.stage)
+        df[!, :study_f]  = categorical(df.study)
+        m = coxph(@formula(event ~ histol_f + stage_f + age + study_f), df; tol=1e-9)
+        compare_cox("nwtco", m)
+    end
+
+    @testset "ovarian" begin
+        df = load_data("ovarian")
+        compare_km_na("ovarian", df.futime, df.fustat .== 1)
+        df[!, :event] = EventTime.(df.futime, df.fustat .== 1)
+        m = coxph(@formula(event ~ age + ecog_ps + rx + resid_ds), df; tol=1e-9)
+        compare_cox("ovarian", m)
+    end
+
+    @testset "pbc" begin
+        df = load_data("pbc")
+        compare_km_na("pbc", df.time, df.status .== 2)
+        cc = dropmissing(df, [:time, :status, :age, :edema, :bili, :albumin, :protime, :stage])
+        cc[!, :event]     = EventTime.(cc.time, cc.status .== 2)
+        cc[!, :logbili]    = log.(cc.bili)
+        cc[!, :logalb]     = log.(cc.albumin)
+        cc[!, :logprotime] = log.(cc.protime)
+        m = coxph(@formula(event ~ age + edema + logbili + logalb + logprotime + stage),
+                  cc; tol=1e-9)
+        compare_cox("pbc", m)
+    end
+
+    @testset "stanford2" begin
+        df = load_data("stanford2")
+        compare_km_na("stanford2", df.time, df.status .== 1)
+        cc = dropmissing(df, [:time, :status, :age, :t5])
+        cc[!, :event] = EventTime.(cc.time, cc.status .== 1)
+        m = coxph(@formula(event ~ age + t5), cc; tol=1e-9)
+        compare_cox("stanford2", m)
+    end
+
+    @testset "veteran" begin
+        df = load_data("veteran")
+        compare_km_na("veteran", df.time, df.status .== 1)
+        # Match the level order used by survival::veteran (which is *not* alphabetical).
+        df[!, :celltype] = categorical(df.celltype;
+                                       levels=["squamous", "smallcell", "adeno", "large"])
+        df[!, :event] = EventTime.(df.time, df.status .== 1)
+        m = coxph(@formula(event ~ trt + celltype + karno + diagtime + age + prior),
+                  df; tol=1e-9)
+        compare_cox("veteran", m)
+    end
+
+    @testset "kidney" begin
+        df = load_data("kidney")
+        compare_km_na("kidney", df.time, df.status .== 1)
+        df[!, :disease] = categorical(df.disease;
+                                      levels=["Other", "GN", "AN", "PKD"])
+        df[!, :event] = EventTime.(df.time, df.status .== 1)
+        m = coxph(@formula(event ~ age + sex + disease), df; tol=1e-9)
+        compare_cox("kidney", m)
+    end
+
+    @testset "colon (death)" begin
+        df = load_data("colon")
+        df = filter(:etype => ==(2), df)
+        compare_km_na("colon", df.time, df.status .== 1)
+        df[!, :rx] = categorical(df.rx; levels=["Obs", "Lev", "Lev+5FU"])
+        cc = dropmissing(df, [:time, :status, :rx, :sex, :age, :obstruct, :perfor,
+                              :adhere, :nodes, :differ, :extent, :surg])
+        cc[!, :event] = EventTime.(cc.time, cc.status .== 1)
+        m = coxph(@formula(event ~ rx + sex + age + obstruct + perfor + adhere +
+                                   nodes + differ + extent + surg),
+                  cc; tol=1e-9)
+        compare_cox("colon", m)
+    end
 end
