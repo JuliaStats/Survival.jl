@@ -263,9 +263,9 @@ one column per covariate) and the response vector `y` of [`EventTime`](@ref) val
 The rows of `M` and the entries of `y` must be in the same order; the model sorts them
 internally by `y` before optimization.
 
-The coefficient vector is estimated by maximizing the partial log-likelihood (Breslow's
-approximation for ties) with a Newton trust-region method. Integer matrices are
-promoted to floating point. No intercept column is fit — the baseline hazard is
+The coefficient vector is estimated by maximizing the partial log-likelihood (Efron's
+approximation for tied event times) with a Newton trust-region method. Integer matrices
+are promoted to floating point. No intercept column is fit — the baseline hazard is
 unidentified in the partial likelihood.
 
 Keyword arguments:
